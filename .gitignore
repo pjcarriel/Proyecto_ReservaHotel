@@ -1,0 +1,16 @@
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Backend (Spring Boot / Maven)
+Backend_ReservasHotel/target/
+
+# Frontend (Angular)
+frontend-reserva-hotel/node_modules/
+frontend-reserva-hotel/dist/
+frontend-reserva-hotel/.angular/
