@@ -4,5 +4,8 @@
   </button>
 </app-page-header>
 
-<!-- TODO (tarea #19, Stalin): reemplazar por la tabla y el formulario -->
-<app-en-construccion responsable="Stalin · tarea #19" />
+<!-- TODO (tarea #19, Stalin): reemplazar por la tabla real con las mismas clases (.tarjeta, .campo, .tabla, .estado) -->
+<app-en-construccion
+  [columnas]="['Nombre', 'Descripción', 'Capacidad', 'Acciones']"
+  buscar="Buscar por nombre…"
+  responsable="Stalin · tarea #19" />

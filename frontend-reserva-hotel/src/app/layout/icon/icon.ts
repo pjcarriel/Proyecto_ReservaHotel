@@ -26,6 +26,13 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
         @case ('flecha') { <path d="M5 12h14M13 6l6 6-6 6" /> }
         @case ('construccion') { <path d="M3 20h18M5 20 9.5 6h5L19 20M7.7 13h8.6M8.8 9.5h6.4" /> }
         @case ('mas') { <path d="M12 5v14M5 12h14" /> }
+        @case ('buscar') { <circle cx="11" cy="11" r="6.5" /><path d="m20 20-4.2-4.2" /> }
+        @case ('filtro') { <path d="M4 6h16M7 12h10M10 18h4" /> }
+        @case ('panel') { <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" /><path d="M9.5 4.5v15" /> }
+        @case ('chevron') { <path d="m9 6 6 6-6 6" /> }
+        @case ('llegada') { <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M4 12h11M11 8l4 4-4 4" /> }
+        @case ('salida') { <path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M9 12h11M16 8l4 4-4 4" /> }
+        @case ('huesped-mas') { <circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6" /> }
       }
     </svg>
   `,

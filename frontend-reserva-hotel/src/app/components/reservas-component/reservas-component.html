@@ -4,5 +4,8 @@
   </button>
 </app-page-header>
 
-<!-- TODO (tarea #23, Jonathan): reemplazar por la tabla y el formulario -->
-<app-en-construccion responsable="Jonathan · tarea #23" />
+<!-- TODO (tarea #23, Jonathan): reemplazar por la tabla real con las mismas clases (.tarjeta, .campo, .tabla, .estado) -->
+<app-en-construccion
+  [columnas]="['Número', 'Huésped', 'Entrada', 'Salida', 'Total', 'Estado']"
+  buscar="Buscar por número o huésped…"
+  responsable="Jonathan · tarea #23" />

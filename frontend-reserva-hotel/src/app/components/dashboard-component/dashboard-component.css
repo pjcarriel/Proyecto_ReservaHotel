@@ -1,46 +1,70 @@
-:host { display: grid; gap: 28px; }
+:host { display: grid; gap: 24px; }
 
-/* ---------- Bienvenida ---------- */
-.bienvenida {
-  position: relative; overflow: hidden; padding: 28px 32px; border-radius: var(--radio-lg);
-  color: #fff;
+/* ---------- Portada ---------- */
+.portada {
+  position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: flex-start;
+  gap: 22px; padding: 32px; border-radius: var(--radio-lg); color: #fff;
   background:
-    radial-gradient(80% 140% at 100% 0%, rgba(231, 207, 159, 0.28) 0%, transparent 55%),
-    linear-gradient(135deg, var(--marino) 0%, #22405f 100%);
+    radial-gradient(70% 120% at 100% 0%, rgba(231, 207, 159, 0.26) 0%, transparent 60%),
+    linear-gradient(135deg, var(--marino) 0%, #24456a 100%);
+  box-shadow: 0 18px 40px -24px rgba(19, 34, 53, 0.8);
 }
-.eyebrow {
-  font-size: 11.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--laton-claro);
-}
-h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin-top: 6px; }
+.portada-texto, .portada-acciones { position: relative; z-index: 1; }
+.eyebrow { font-size: 11.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--laton-claro); }
+h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.025em; margin-top: 6px; }
 .sub { color: #b8c4d4; margin-top: 4px; }
+.portada-acciones { display: flex; gap: 10px; flex-wrap: wrap; }
+.portada-arcos {
+  position: absolute; right: -10px; bottom: -6px; width: 300px; opacity: 0.12;
+  fill: none; stroke: var(--laton-claro); stroke-width: 1.5;
+}
 
 /* ---------- Indicadores ---------- */
 .indicadores { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-@media (max-width: 1100px) { .indicadores { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 480px) { .indicadores { grid-template-columns: 1fr; } }
-.indicador { padding: 18px 20px; }
-.indicador-cabecera { display: flex; align-items: center; justify-content: space-between; }
-.indicador-titulo { font-size: 13px; font-weight: 600; color: var(--texto-suave); }
+.indicador { display: flex; align-items: flex-start; gap: 14px; padding: 18px; --tono: var(--marino); --tono-suave: #e7ecf2; }
+.indicador[data-tono="exito"] { --tono: var(--exito); --tono-suave: var(--exito-suave); }
+.indicador[data-tono="laton"] { --tono: var(--laton); --tono-suave: var(--laton-suave); }
+.indicador[data-tono="azul"] { --tono: #3567a8; --tono-suave: #e6eef8; }
 .indicador-icono {
-  width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
-  background: var(--laton-suave); color: var(--laton);
+  width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0;
+  background: var(--tono-suave); color: var(--tono);
 }
-.indicador-valor {
-  font-size: 30px; font-weight: 700; letter-spacing: -0.03em; margin-top: 10px;
-  font-variant-numeric: tabular-nums;
-}
-.indicador-valor.vacio { color: var(--borde-fuerte); }
-.indicador-detalle { font-size: 12.5px; color: var(--texto-tenue); }
+.indicador-icono app-icon { width: 20px; height: 20px; }
+.indicador-titulo { font-size: 13px; font-weight: 600; color: var(--texto-suave); }
+.indicador-valor { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.indicador-detalle { font-size: 12px; color: var(--texto-tenue); }
+.sin-dato { color: var(--borde-fuerte); }
+
+/* ---------- Paneles ---------- */
+.paneles { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; }
+
+.ocupacion { display: flex; align-items: center; gap: 28px; padding: 24px; flex-wrap: wrap; justify-content: center; }
+.anillo { position: relative; width: 140px; height: 140px; }
+.anillo svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.anillo circle { fill: none; stroke-width: 12; }
+.anillo-fondo { stroke: var(--superficie-2); }
+.anillo-valor { stroke: var(--laton); stroke-linecap: round; transition: stroke-dasharray 0.6s ease; }
+.anillo-texto { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.anillo-texto strong { font-size: 26px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
+.anillo-texto span { font-size: 12px; color: var(--texto-tenue); }
+
+.leyenda { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; min-width: 170px; }
+.leyenda li { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.leyenda-punto { width: 10px; height: 10px; border-radius: 3px; }
+.leyenda-punto.ocupadas { background: var(--laton); }
+.leyenda-punto.disponibles { background: var(--exito); }
+.leyenda-punto.mantenimiento { background: var(--aviso); }
+.leyenda-texto { flex: 1; color: var(--texto-suave); }
+.leyenda-valor { font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* ---------- Accesos rápidos ---------- */
 .titulo-bloque { font-size: 15px; font-weight: 650; margin-bottom: 12px; }
-.accesos { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.accesos { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
 .acceso {
   display: flex; align-items: center; gap: 14px; padding: 16px; color: inherit; text-decoration: none;
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
 }
-a.acceso:hover { border-color: var(--laton-claro); box-shadow: var(--sombra); transform: translateY(-1px); }
+a.acceso:hover { border-color: var(--laton-claro); box-shadow: var(--sombra); transform: translateY(-2px); }
 .acceso.pendiente { background: var(--superficie-2); box-shadow: none; }
 .acceso-icono {
   width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; flex-shrink: 0;
@@ -52,7 +76,16 @@ a.acceso:hover { border-color: var(--laton-claro); box-shadow: var(--sombra); tr
 .acceso-desc { font-size: 12.5px; color: var(--texto-tenue); }
 .acceso-flecha { color: var(--texto-tenue); }
 
+/* ---------- Responsive ---------- */
+@media (max-width: 1100px) {
+  .indicadores { grid-template-columns: repeat(2, 1fr); }
+  .paneles { grid-template-columns: 1fr; }
+}
 @media (max-width: 600px) {
-  .bienvenida { padding: 22px 20px; }
-  h1 { font-size: 22px; }
+  .portada { padding: 24px 20px; }
+  h1 { font-size: 24px; }
+  .portada-acciones, .portada-acciones .btn { width: 100%; }
+}
+@media (max-width: 480px) {
+  .indicadores { grid-template-columns: 1fr; }
 }
