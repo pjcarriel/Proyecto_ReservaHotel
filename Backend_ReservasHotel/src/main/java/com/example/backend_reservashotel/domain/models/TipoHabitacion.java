@@ -22,16 +22,16 @@ public class TipoHabitacion {
         this.modificado = modificado;
     }
 
-    // El id y las fechas de auditoria se asignan al persistir, como en Categoria.
+    // El id y las fechas de auditoria se asignan al persistir.
     public static TipoHabitacion nuevo(String nombre, String descripcion, int capacidad) {
         validarDatosBasicos(nombre, capacidad);
-        return new TipoHabitacion(null, nombre, descripcion, capacidad, null, null);
+        return new TipoHabitacion(null, nombre.trim(), descripcion, capacidad, null, null);
     }
 
     // Actualiza solo los campos ingresados por el usuario.
     public void actualizar(String nombre, String descripcion, int capacidad) {
         validarDatosBasicos(nombre, capacidad);
-        this.nombre = nombre;
+        this.nombre = nombre.trim();
         this.descripcion = descripcion;
         this.capacidad = capacidad;
     }
