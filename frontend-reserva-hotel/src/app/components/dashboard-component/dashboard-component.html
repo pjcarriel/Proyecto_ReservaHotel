@@ -1,0 +1,47 @@
+<section class="bienvenida">
+  <div>
+    <p class="eyebrow">Panel de recepción</p>
+    <h1>{{ saludo }}</h1>
+    <p class="sub">Este es el resumen de la operación del hotel.</p>
+  </div>
+</section>
+
+<section class="indicadores" aria-label="Indicadores">
+  @for (ind of indicadores; track ind.titulo) {
+    <article class="tarjeta indicador">
+      <div class="indicador-cabecera">
+        <span class="indicador-titulo">{{ ind.titulo }}</span>
+        <span class="indicador-icono"><app-icon [nombre]="ind.icono" /></span>
+      </div>
+      <p class="indicador-valor" [class.vacio]="ind.valor === null">{{ ind.valor ?? '—' }}</p>
+      <p class="indicador-detalle">{{ ind.detalle }}</p>
+    </article>
+  }
+</section>
+
+<section>
+  <h2 class="titulo-bloque">Accesos rápidos</h2>
+  <div class="accesos">
+    @for (op of accesos; track op.ruta) {
+      @if (op.listo) {
+        <a class="tarjeta acceso" [routerLink]="op.ruta">
+          <span class="acceso-icono"><app-icon [nombre]="op.icono" /></span>
+          <span class="acceso-texto">
+            <span class="acceso-nombre">{{ op.texto }}</span>
+            <span class="acceso-desc">{{ op.descripcion }}</span>
+          </span>
+          <app-icon class="acceso-flecha" nombre="flecha" />
+        </a>
+      } @else {
+        <div class="tarjeta acceso pendiente" title="Pantalla en construcción">
+          <span class="acceso-icono"><app-icon [nombre]="op.icono" /></span>
+          <span class="acceso-texto">
+            <span class="acceso-nombre">{{ op.texto }}</span>
+            <span class="acceso-desc">{{ op.descripcion }}</span>
+          </span>
+          <span class="etiqueta">Pronto</span>
+        </div>
+      }
+    }
+  </div>
+</section>
