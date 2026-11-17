@@ -1,0 +1,11 @@
+<app-page-header titulo="Tipos de habitación" descripcion="Categorías de habitación, capacidad y descripción." icono="tipos">
+  <button type="button" class="btn btn-primario" disabled>
+    <app-icon nombre="mas" /> Nuevo tipo
+  </button>
+</app-page-header>
+
+<!-- TODO (tarea #19, Stalin): reemplazar por la tabla real con las mismas clases (.tarjeta, .campo, .tabla, .estado) -->
+<app-en-construccion
+  [columnas]="['Nombre', 'Descripción', 'Capacidad', 'Acciones']"
+  buscar="Buscar por nombre…"
+  responsable="Stalin · tarea #19" />

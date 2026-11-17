@@ -1,1 +1,309 @@
-/* You can add global styles to this file, and also import other style files */
+/* =========================================================
+   Sistema de diseño global — Hotel Reservas
+   Colores, tipografía y piezas base que usan todas las pantallas.
+   ========================================================= */
+
+:root {
+  /* Superficies */
+  --fondo: #f5f3ee;            /* marfil cálido */
+  --superficie: #ffffff;
+  --superficie-2: #faf8f4;
+  --borde: #e8e3d9;
+  --borde-fuerte: #d9d2c4;
+
+  /* Texto */
+  --texto: #18212e;
+  --texto-suave: #475164;
+  --texto-tenue: #7b8494;
+
+  /* Marca */
+  --marino: #132235;           /* barra lateral */
+  --marino-2: #1b2e45;
+  --marino-texto: #c5cfdc;
+  --marino-tenue: #7e8ea4;
+  --laton: #b98a4b;            /* acento dorado */
+  --laton-claro: #e7cf9f;
+  --laton-suave: #f5ecdc;
+
+  /* Estados */
+  --exito: #2f7d5b;
+  --exito-suave: #e3f2ea;
+  --peligro: #b9473b;
+  --peligro-suave: #fbe9e6;
+  --aviso: #a86b12;
+  --aviso-suave: #fbf0dc;
+
+  /* Forma */
+  --radio-sm: 8px;
+  --radio: 12px;
+  --radio-lg: 16px;
+  --sombra-sm: 0 1px 2px rgba(19, 34, 53, 0.06);
+  --sombra: 0 1px 2px rgba(19, 34, 53, 0.05), 0 6px 20px -8px rgba(19, 34, 53, 0.12);
+
+  --fuente: "Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: var(--fuente);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, p {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--laton);
+  outline-offset: 2px;
+}
+
+/* ---------- Tarjeta ---------- */
+.tarjeta {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-lg);
+  box-shadow: var(--sombra-sm);
+}
+
+/* ---------- Botones ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primario {
+  background: var(--marino);
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, var(--sombra-sm);
+}
+.btn-primario:not(:disabled):hover {
+  background: var(--marino-2);
+}
+
+.btn-secundario {
+  background: var(--superficie);
+  border-color: var(--borde-fuerte);
+  color: var(--texto);
+}
+.btn-secundario:not(:disabled):hover {
+  background: var(--superficie-2);
+}
+
+/* ---------- Etiquetas ---------- */
+.etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: var(--superficie-2);
+  color: var(--texto-suave);
+  border: 1px solid var(--borde);
+}
+
+/* Estados (CONFIRMADA, DISPONIBLE, CANCELADA, MANTENIMIENTO...) */
+.estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.estado::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.estado-exito { background: var(--exito-suave); color: var(--exito); }
+.estado-peligro { background: var(--peligro-suave); color: var(--peligro); }
+.estado-aviso { background: var(--aviso-suave); color: var(--aviso); }
+
+.btn-dorado {
+  background: linear-gradient(145deg, var(--laton-claro), var(--laton));
+  color: var(--marino);
+  box-shadow: 0 6px 16px -8px rgba(185, 138, 75, 0.9);
+}
+.btn-dorado:not(:disabled):hover { filter: brightness(1.05); }
+
+.btn-claro {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+.btn-claro:not(:disabled):hover { background: rgba(255, 255, 255, 0.16); }
+
+/* ---------- Tarjeta con encabezado ---------- */
+.tarjeta-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--borde);
+}
+.tarjeta-cabecera h2 { font-size: 15px; font-weight: 650; }
+.tarjeta-cabecera p { font-size: 12.5px; color: var(--texto-tenue); }
+
+/* ---------- Campos de formulario ---------- */
+.campo {
+  height: 38px;
+  width: 100%;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--borde-fuerte);
+  background: var(--superficie);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.campo::placeholder { color: var(--texto-tenue); }
+.campo:focus {
+  outline: none;
+  border-color: var(--laton);
+  box-shadow: 0 0 0 3px var(--laton-suave);
+}
+.campo:disabled { background: var(--superficie-2); cursor: not-allowed; }
+
+/* ---------- Control segmentado (pestañas pequeñas) ---------- */
+.segmentos {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 10px;
+  background: var(--superficie-2);
+  border: 1px solid var(--borde);
+}
+.segmentos button {
+  border: 0;
+  background: none;
+  padding: 5px 12px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--texto-tenue);
+  cursor: pointer;
+}
+.segmentos button[aria-pressed="true"] {
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: var(--sombra-sm);
+}
+
+/* ---------- Tablas ---------- */
+.tabla-contenedor { overflow-x: auto; }
+.tabla { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.tabla th {
+  text-align: left;
+  padding: 11px 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--texto-tenue);
+  background: var(--superficie-2);
+  border-bottom: 1px solid var(--borde);
+  white-space: nowrap;
+}
+.tabla td { padding: 13px 20px; border-bottom: 1px solid var(--borde); }
+.tabla tbody tr:last-child td { border-bottom: 0; }
+.tabla tbody tr:hover td { background: #fcfbf8; }
+
+/* ---------- Estado vacío ---------- */
+.vacio {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--texto-tenue);
+}
+.vacio-icono {
+  width: 52px;
+  height: 52px;
+  margin-bottom: 6px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: var(--superficie-2);
+  border: 1px dashed var(--borde-fuerte);
+}
+.vacio-icono app-icon { width: 24px; height: 24px; }
+.vacio strong { color: var(--texto); font-size: 14.5px; }
+.vacio p { max-width: 360px; font-size: 13px; }
+
+/* ---------- Esqueleto de carga ---------- */
+.esqueleto {
+  display: block;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #efebe3 0%, #f8f6f1 50%, #efebe3 100%);
+  background-size: 200% 100%;
+  animation: brillo 1.6s ease-in-out infinite;
+}
+@keyframes brillo {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+/* ---------- Entrada de cada pantalla ---------- */
+/* :where() deja la especificidad en 0 para que el :host de cada pantalla pueda cambiar el display */
+:where(app-menu-component .contenido > :not(router-outlet)) {
+  display: block;
+  animation: entrar 0.28s ease-out;
+}
+@keyframes entrar {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

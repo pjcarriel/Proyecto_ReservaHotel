@@ -1,0 +1,11 @@
+<app-page-header titulo="Usuarios" descripcion="Cuentas del sistema, roles y acceso." icono="usuarios">
+  <button type="button" class="btn btn-primario" disabled>
+    <app-icon nombre="mas" /> Nuevo usuario
+  </button>
+</app-page-header>
+
+<!-- TODO (tarea #21, Pamela): reemplazar por la tabla real con las mismas clases (.tarjeta, .campo, .tabla, .estado) -->
+<app-en-construccion
+  [columnas]="['Usuario', 'Nombre', 'Rol', 'Estado', 'Acciones']"
+  buscar="Buscar por usuario o nombre…"
+  responsable="Pamela · tarea #21" />

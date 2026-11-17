@@ -1,4 +1,4 @@
 // URL base del backend Spring Boot
 export const environment = {
-  apiUrl: 'http://localhost:8080/api'
+  apiURL: 'http://localhost:8080/api/v1'
 };
