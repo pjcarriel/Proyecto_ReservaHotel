@@ -1,0 +1,11 @@
+<app-page-header titulo="Reservas" descripcion="Reservas confirmadas y canceladas." icono="reservas">
+  <button type="button" class="btn btn-primario" disabled>
+    <app-icon nombre="mas" /> Nueva reserva
+  </button>
+</app-page-header>
+
+<!-- TODO (tarea #23, Jonathan): reemplazar por la tabla real con las mismas clases (.tarjeta, .campo, .tabla, .estado) -->
+<app-en-construccion
+  [columnas]="['Número', 'Huésped', 'Entrada', 'Salida', 'Total', 'Estado']"
+  buscar="Buscar por número o huésped…"
+  responsable="Jonathan · tarea #23" />

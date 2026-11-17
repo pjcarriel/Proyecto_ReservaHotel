@@ -1,0 +1,91 @@
+<div class="layout" [class.abierto]="menuAbierto()" [class.colapsado]="colapsado()">
+
+  <aside class="sidebar" id="menu-lateral">
+    <a class="marca" routerLink="/" title="Hotel Reservas">
+      <span class="marca-logo"><app-icon nombre="campana" /></span>
+      <span class="marca-texto">
+        <span class="marca-nombre">Hotel Reservas</span>
+        <span class="marca-sub">Panel de recepción</span>
+      </span>
+    </a>
+
+    <nav aria-label="Menú principal">
+      @for (seccion of secciones; track $index) {
+        @if (seccion.titulo) {
+          <p class="titulo-seccion">{{ seccion.titulo }}</p>
+        }
+        <ul>
+          @for (op of seccion.opciones; track op.ruta) {
+            <li>
+              @if (op.listo) {
+                <a class="item"
+                   [routerLink]="op.ruta"
+                   routerLinkActive="activo"
+                   ariaCurrentWhenActive="page"
+                   [routerLinkActiveOptions]="{ exact: op.ruta === '/' }"
+                   [attr.title]="colapsado() ? op.texto : null">
+                  <app-icon [nombre]="op.icono" />
+                  <span class="item-texto">{{ op.texto }}</span>
+                </a>
+              } @else {
+                <span class="item pendiente" [attr.title]="op.texto + ' · en construcción'">
+                  <app-icon [nombre]="op.icono" />
+                  <span class="item-texto">{{ op.texto }}</span>
+                  <span class="pronto">Pronto</span>
+                </span>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </nav>
+
+    <!-- TODO (tarea #21): nombre de usuario, rol y botón cerrar sesión -->
+    <button type="button" class="api" [attr.data-estado]="estadoApi()" (click)="verificarApi()"
+            title="Volver a comprobar la conexión con el backend">
+      <span class="punto"></span>
+      <span class="api-texto">
+        @switch (estadoApi()) {
+          @case ('conectada') { API conectada }
+          @case ('sin-conexion') { API sin conexión · reintentar }
+          @default { Comprobando API… }
+        }
+      </span>
+    </button>
+  </aside>
+
+  <div class="fondo" (click)="cerrarMenu()"></div>
+
+  <div class="principal">
+    <header class="barra">
+      <button type="button" class="btn-barra solo-movil" (click)="alternarMenu()"
+              aria-label="Abrir menú" aria-controls="menu-lateral" [attr.aria-expanded]="menuAbierto()">
+        <app-icon nombre="menu" />
+      </button>
+      <button type="button" class="btn-barra solo-escritorio" (click)="alternarColapsado()"
+              [attr.aria-label]="colapsado() ? 'Expandir menú' : 'Contraer menú'"
+              [attr.title]="colapsado() ? 'Expandir menú' : 'Contraer menú'">
+        <app-icon nombre="panel" />
+      </button>
+
+      <nav class="migas" aria-label="Ubicación">
+        <a routerLink="/">Hotel</a>
+        @if (actual()?.seccion; as seccion) {
+          <app-icon nombre="chevron" />
+          <span>{{ seccion }}</span>
+        }
+        @if (actual(); as a) {
+          <app-icon nombre="chevron" />
+          <span class="migas-actual" aria-current="page">{{ a.opcion.texto }}</span>
+        }
+      </nav>
+
+      <span class="fecha"><app-icon nombre="calendario" /><span>{{ fecha }}</span></span>
+    </header>
+
+    <!-- Aquí aparece la pantalla de la ruta hija -->
+    <main class="contenido">
+      <router-outlet />
+    </main>
+  </div>
+</div>

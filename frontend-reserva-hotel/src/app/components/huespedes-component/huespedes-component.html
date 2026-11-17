@@ -1,0 +1,11 @@
+<app-page-header titulo="Huéspedes" descripcion="Registro de huéspedes con sus datos de contacto." icono="huespedes">
+  <button type="button" class="btn btn-primario" disabled>
+    <app-icon nombre="mas" /> Nuevo huésped
+  </button>
+</app-page-header>
+
+<!-- TODO (tarea #20, Jonathan): reemplazar por la tabla real con las mismas clases (.tarjeta, .campo, .tabla, .estado) -->
+<app-en-construccion
+  [columnas]="['Cédula', 'Nombres', 'Apellidos', 'Email', 'Teléfono', 'Acciones']"
+  buscar="Buscar por cédula o nombre…"
+  responsable="Jonathan · tarea #20" />

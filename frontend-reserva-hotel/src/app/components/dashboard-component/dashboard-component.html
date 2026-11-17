@@ -1,0 +1,125 @@
+<!-- Portada -->
+<section class="portada">
+  <div class="portada-texto">
+    <p class="eyebrow">Panel de recepción</p>
+    <h1>{{ saludo }}</h1>
+    <p class="sub">Este es el resumen de la operación del hotel para hoy.</p>
+  </div>
+  <div class="portada-acciones">
+    @if (nuevaReserva?.listo) {
+      <a class="btn btn-dorado" [routerLink]="nuevaReserva!.ruta"><app-icon nombre="mas" /> Nueva reserva</a>
+    } @else {
+      <button type="button" class="btn btn-dorado" disabled title="Disponible cuando la pantalla de Reservas esté lista">
+        <app-icon nombre="mas" /> Nueva reserva
+      </button>
+    }
+    @if (nuevoHuesped?.listo) {
+      <a class="btn btn-claro" [routerLink]="nuevoHuesped!.ruta"><app-icon nombre="huesped-mas" /> Registrar huésped</a>
+    } @else {
+      <button type="button" class="btn btn-claro" disabled title="Disponible cuando la pantalla de Huéspedes esté lista">
+        <app-icon nombre="huesped-mas" /> Registrar huésped
+      </button>
+    }
+  </div>
+  <!-- Arcos decorativos -->
+  <svg class="portada-arcos" viewBox="0 0 240 160" aria-hidden="true">
+    <path d="M20 160V90a50 50 0 0 1 100 0v70M70 160V95a50 50 0 0 1 100 0v65M120 160v-60a50 50 0 0 1 100 0v60" />
+  </svg>
+</section>
+
+<!-- Indicadores -->
+<section class="indicadores" aria-label="Indicadores">
+  @for (ind of indicadores; track ind.titulo) {
+    <article class="tarjeta indicador" [attr.data-tono]="ind.tono">
+      <span class="indicador-icono"><app-icon [nombre]="ind.icono" /></span>
+      <div>
+        <p class="indicador-titulo">{{ ind.titulo }}</p>
+        <p class="indicador-valor" [class.sin-dato]="ind.valor === null">{{ ind.valor ?? '—' }}</p>
+        <p class="indicador-detalle">{{ ind.detalle }}</p>
+      </div>
+    </article>
+  }
+</section>
+
+<!-- Movimiento y ocupación -->
+<section class="paneles">
+  <article class="tarjeta">
+    <header class="tarjeta-cabecera">
+      <div>
+        <h2>Movimiento de hoy</h2>
+        <p>Huéspedes que llegan y que salen</p>
+      </div>
+      <div class="segmentos" role="group" aria-label="Tipo de movimiento">
+        <button type="button" [attr.aria-pressed]="movimiento() === 'llegadas'" (click)="movimiento.set('llegadas')">Llegadas</button>
+        <button type="button" [attr.aria-pressed]="movimiento() === 'salidas'" (click)="movimiento.set('salidas')">Salidas</button>
+      </div>
+    </header>
+    <!-- TODO (tarea #24): listar las reservas cuya entrada/salida es hoy -->
+    <div class="vacio">
+      <span class="vacio-icono"><app-icon [nombre]="movimiento() === 'llegadas' ? 'llegada' : 'salida'" /></span>
+      <strong>{{ movimiento() === 'llegadas' ? 'Llegadas del día' : 'Salidas del día' }}</strong>
+      <p>Aparecerán aquí cuando el módulo de reservas esté conectado.</p>
+    </div>
+  </article>
+
+  <article class="tarjeta">
+    <header class="tarjeta-cabecera">
+      <div>
+        <h2>Ocupación</h2>
+        <p>Estado de las habitaciones hoy</p>
+      </div>
+    </header>
+    <div class="ocupacion">
+      <div class="anillo">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="anillo-fondo" cx="60" cy="60" r="52" />
+          @if (ocupacion()) {
+            <circle class="anillo-valor" cx="60" cy="60" r="52"
+                    [attr.stroke-dasharray]="arco() + ' ' + circunferencia" />
+          }
+        </svg>
+        <div class="anillo-texto">
+          <strong [class.sin-dato]="ocupacion() === null">{{ ocupacion() === null ? '—' : ocupacion() + '%' }}</strong>
+          <span>ocupado</span>
+        </div>
+      </div>
+      <ul class="leyenda">
+        @for (l of leyenda; track l.texto) {
+          <li>
+            <span class="leyenda-punto" [class]="l.clase"></span>
+            <span class="leyenda-texto">{{ l.texto }}</span>
+            <span class="leyenda-valor">{{ l.valor ?? '—' }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+  </article>
+</section>
+
+<!-- Accesos rápidos -->
+<section>
+  <h2 class="titulo-bloque">Accesos rápidos</h2>
+  <div class="accesos">
+    @for (op of accesos; track op.ruta) {
+      @if (op.listo) {
+        <a class="tarjeta acceso" [routerLink]="op.ruta">
+          <span class="acceso-icono"><app-icon [nombre]="op.icono" /></span>
+          <span class="acceso-texto">
+            <span class="acceso-nombre">{{ op.texto }}</span>
+            <span class="acceso-desc">{{ op.descripcion }}</span>
+          </span>
+          <app-icon class="acceso-flecha" nombre="flecha" />
+        </a>
+      } @else {
+        <div class="tarjeta acceso pendiente" title="Pantalla en construcción">
+          <span class="acceso-icono"><app-icon [nombre]="op.icono" /></span>
+          <span class="acceso-texto">
+            <span class="acceso-nombre">{{ op.texto }}</span>
+            <span class="acceso-desc">{{ op.descripcion }}</span>
+          </span>
+          <span class="etiqueta">Pronto</span>
+        </div>
+      }
+    }
+  </div>
+</section>
