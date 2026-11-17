@@ -1,0 +1,10 @@
+# Configuración personal de MySQL.
+# 1. Copia este archivo y renómbralo a: application-local.properties
+#    (en la misma carpeta, Backend_ReservasHotel)
+# 2. Cambia los valores por los de tu MySQL.
+# El archivo application-local.properties está en .gitignore: tu contraseña no se sube.
+
+# Puerto de tu MySQL (por defecto 3306)
+DB_PORT=3306
+DB_USERNAME=root
+DB_PASSWORD=root
