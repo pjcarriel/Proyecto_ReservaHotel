@@ -1,9 +1,9 @@
 package com.example.backend_reservashotel.domain.models;
 
 import com.example.backend_reservashotel.domain.exception.DatoInvalidoException;
+
 import java.time.LocalDateTime;
 
-// Representa el dominio del Huesped
 public class Huesped {
     private Long id;
     private String cedula;
@@ -14,9 +14,9 @@ public class Huesped {
     private LocalDateTime creado;
     private LocalDateTime modificado;
 
-    // Constructor completo para mapear desde la base de datos (Persistencia)
-    public Huesped(Long id, String cedula, String nombres, String apellidos, String email, String telefono,
-                   LocalDateTime creado, LocalDateTime modificado) {
+    // Constructor completo para reconstruir desde persistencia (Mapper -> toDomain)
+    public Huesped(Long id, String cedula, String nombres, String apellidos,
+                   String email, String telefono, LocalDateTime creado, LocalDateTime modificado) {
         this.id = id;
         this.cedula = cedula;
         this.nombres = nombres;
@@ -27,25 +27,31 @@ public class Huesped {
         this.modificado = modificado;
     }
 
-    // Valores que son propios de un ingreso de usuario
-    // SOLO CAMPOS QUE SON INGRESADOS POR EL USUARIO
+    // Fábrica estática para creación desde petición de usuario
     public static Huesped nuevo(String cedula, String nombres, String apellidos, String email, String telefono) {
         validarDatosBasicos(cedula, nombres, apellidos);
-        return new Huesped(null, cedula, nombres, apellidos, email, telefono, null, null);
+        return new Huesped(
+                null,
+                cedula.trim(),
+                nombres.trim(),
+                apellidos.trim(),
+                normalizar(email),
+                normalizar(telefono),
+                null,
+                null
+        );
     }
 
-    // Para actualizar, utilizar el objeto que ya fue convertido al dominio
-    // SOLO CAMPOS QUE SON INGRESADOS POR EL USUARIO
+    // Mutación controlada para actualización de campos editables
     public void actualizar(String cedula, String nombres, String apellidos, String email, String telefono) {
         validarDatosBasicos(cedula, nombres, apellidos);
-        this.cedula = cedula;
-        this.nombres = nombres;
-        this.apellidos = apellidos;
-        this.email = email;
-        this.telefono = telefono;
+        this.cedula = cedula.trim();
+        this.nombres = nombres.trim();
+        this.apellidos = apellidos.trim();
+        this.email = normalizar(email);
+        this.telefono = normalizar(telefono);
     }
 
-    // Metodo de validacion basico del dominio
     private static void validarDatosBasicos(String cedula, String nombres, String apellidos) {
         if (cedula == null || cedula.trim().isEmpty()) {
             throw new DatoInvalidoException("La cédula no puede estar vacía");
@@ -58,7 +64,10 @@ public class Huesped {
         }
     }
 
-    // Getters
+    private static String normalizar(String valor) {
+        return (valor == null || valor.trim().isEmpty()) ? null : valor.trim();
+    }
+
     public Long getId() {
         return id;
     }
