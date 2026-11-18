@@ -1,5 +1,7 @@
 package com.example.backend_reservashotel.domain.models;
 
+import com.example.backend_reservashotel.domain.exception.DatoInvalidoException;
+
 import java.time.LocalDateTime;
 
 public class TipoHabitacion {
@@ -20,16 +22,27 @@ public class TipoHabitacion {
         this.modificado = modificado;
     }
 
-    // El id y las fechas de auditoria se asignan al persistir, como en Categoria.
+    // El id y las fechas de auditoria se asignan al persistir.
     public static TipoHabitacion nuevo(String nombre, String descripcion, int capacidad) {
-        return new TipoHabitacion(null, nombre, descripcion, capacidad, null, null);
+        validarDatosBasicos(nombre, capacidad);
+        return new TipoHabitacion(null, nombre.trim(), descripcion, capacidad, null, null);
     }
 
     // Actualiza solo los campos ingresados por el usuario.
     public void actualizar(String nombre, String descripcion, int capacidad) {
-        this.nombre = nombre;
+        validarDatosBasicos(nombre, capacidad);
+        this.nombre = nombre.trim();
         this.descripcion = descripcion;
         this.capacidad = capacidad;
+    }
+
+    private static void validarDatosBasicos(String nombre, int capacidad) {
+        if (nombre == null || nombre.trim().isEmpty()) {
+            throw new DatoInvalidoException("El nombre del tipo de habitación no puede estar vacío");
+        }
+        if (capacidad <= 0) {
+            throw new DatoInvalidoException("La capacidad debe ser mayor a 0");
+        }
     }
 
     public Long getId() {
