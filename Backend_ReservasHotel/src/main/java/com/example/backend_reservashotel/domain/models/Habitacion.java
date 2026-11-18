@@ -31,14 +31,14 @@ public class Habitacion {
 
     public static Habitacion nuevo(String numero, int piso, BigDecimal precioNoche,
                                    EstadoHabitacion estado, TipoHabitacion tipoHabitacion) {
-        validarDatosBasicos(numero, precioNoche, estado, tipoHabitacion);
+        validarDatosBasicos(numero, piso, precioNoche, estado, tipoHabitacion);
         return new Habitacion(null, numero.trim(), piso, precioNoche, estado,
                 tipoHabitacion, null, null);
     }
 
     public void actualizar(String numero, int piso, BigDecimal precioNoche,
                            EstadoHabitacion estado, TipoHabitacion tipoHabitacion) {
-        validarDatosBasicos(numero, precioNoche, estado, tipoHabitacion);
+        validarDatosBasicos(numero, piso, precioNoche, estado, tipoHabitacion);
         this.numero = numero.trim();
         this.piso = piso;
         this.precioNoche = precioNoche;
@@ -46,10 +46,13 @@ public class Habitacion {
         this.tipoHabitacion = tipoHabitacion;
     }
 
-    private static void validarDatosBasicos(String numero, BigDecimal precioNoche,
+    private static void validarDatosBasicos(String numero, int piso, BigDecimal precioNoche,
                                            EstadoHabitacion estado, TipoHabitacion tipoHabitacion) {
         if (numero == null || numero.trim().isEmpty()) {
             throw new DatoInvalidoException("El número de habitación es obligatorio");
+        }
+        if (piso < 0) {
+            throw new DatoInvalidoException("El piso de la habitación no puede ser negativo");
         }
         if (precioNoche == null || precioNoche.compareTo(BigDecimal.ZERO) <= 0) {
             throw new DatoInvalidoException("El precio por noche debe ser mayor a 0");

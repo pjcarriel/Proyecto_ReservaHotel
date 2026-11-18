@@ -69,7 +69,7 @@
       "name": "01 - Crear listar y consultar",
       "item": [
         {
-          "name": "01 - Crear tipo de habitacion",
+          "name": "01 - Crear tipo con descripcion de 15 caracteres",
           "request": {
             "method": "POST",
             "header": [
@@ -85,7 +85,7 @@
             "url": "{{baseUrl}}/api/v1/tipo-habitacion",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"{{nombrePrueba}}\",\n  \"descripcion\": \"Habitacion confortable para los huespedes\",\n  \"capacidad\": 2\n}",
+              "raw": "{\n  \"nombre\": \"{{nombrePrueba}}\",\n  \"descripcion\": \"Descripcion uno\",\n  \"capacidad\": 2\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -126,6 +126,7 @@
                   "    const tipo = pm.response.json().result;",
                   "    pm.expect(tipo.id).to.be.a('number').above(0);",
                   "    pm.expect(tipo.capacidad).to.eql(2);",
+                  "    pm.expect(tipo.descripcion).to.have.lengthOf(15);",
                   "    pm.expect(tipo.creado).to.be.a('string');",
                   "    pm.expect(tipo.modificado).to.be.a('string');",
                   "});"
@@ -590,7 +591,7 @@
           ]
         },
         {
-          "name": "14 - Rechazar descripcion demasiado corta",
+          "name": "14 - Rechazar descripcion de 14 caracteres",
           "request": {
             "method": "POST",
             "header": [
@@ -606,7 +607,7 @@
             "url": "{{baseUrl}}/api/v1/tipo-habitacion",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Descripcion corta\",\n  \"descripcion\": \"Corta\",\n  \"capacidad\": 1\n}",
+              "raw": "{\n  \"nombre\": \"Descripcion corta\",\n  \"descripcion\": \"Descripcion de\",\n  \"capacidad\": 1\n}",
               "options": {
                 "raw": {
                   "language": "json"
