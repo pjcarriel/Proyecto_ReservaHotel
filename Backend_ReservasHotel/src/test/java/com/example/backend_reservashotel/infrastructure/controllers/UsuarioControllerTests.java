@@ -5,6 +5,7 @@ import com.example.backend_reservashotel.domain.exception.ReglaNegocioException;
 import com.example.backend_reservashotel.domain.models.Rol;
 import com.example.backend_reservashotel.domain.models.Usuario;
 import com.example.backend_reservashotel.infrastructure.config.SecurityConfig;
+import com.example.backend_reservashotel.infrastructure.securities.JWTServices;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -29,8 +30,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UsuarioController.class)
-@Import(SecurityConfig.class)
-@TestPropertySource(properties = "app.cors.allowed-origins=http://localhost:4200")
+@Import({SecurityConfig.class, JWTServices.class})
+@TestPropertySource(properties = {
+        "app.cors.allowed-origins=http://localhost:4200",
+        "jwt.secret=8hwE1MqQ7W2sRFAqqDOJo+p2QJCJTXwxtoIex32R8bA=",
+        "jwt.expiration=60000"
+})
 class UsuarioControllerTests {
     private static final String URL = "/api/v1/usuario";
 

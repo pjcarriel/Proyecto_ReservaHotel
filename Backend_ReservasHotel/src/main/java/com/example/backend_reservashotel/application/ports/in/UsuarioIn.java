@@ -9,6 +9,9 @@ public interface UsuarioIn {
 
     Usuario buscarPorId(Long id);
 
+    // Para armar la respuesta del login
+    Usuario buscarPorUsername(String username);
+
     // El usuario llega con el password en texto plano; el servicio lo encripta
     Usuario crear(Usuario usuario);
 

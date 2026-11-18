@@ -42,6 +42,13 @@ public class UsuarioService implements UsuarioIn {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Usuario buscarPorUsername(String username) {
+        return usuarioOut.buscarPorUsername(username)
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el usuario"));
+    }
+
+    @Override
     public Usuario crear(Usuario usuario) {
         String passwordPlano = usuario.getPassword();
         if (passwordPlano == null || passwordPlano.isBlank()) {
