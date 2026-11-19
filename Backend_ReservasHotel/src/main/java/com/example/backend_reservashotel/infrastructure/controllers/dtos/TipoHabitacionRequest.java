@@ -11,7 +11,7 @@ public record TipoHabitacionRequest(
         String nombre,
 
         @NotBlank(message = "La descripción es obligatoria")
-        @Size(min = 10, max = 200, message = "La descripción debe tener entre 10 y 200 caracteres")
+        @Size(min = 15, max = 200, message = "La descripción debe tener entre 15 y 200 caracteres")
         String descripcion,
 
         @NotNull(message = "La capacidad es obligatoria")

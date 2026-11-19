@@ -50,7 +50,8 @@ Ejemplo del cuerpo de POST y PUT:
 
 El nombre es obligatorio, admite hasta 60 caracteres y se almacena sin espacios externos.
 La unicidad ignora mayúsculas y excluye el propio registro al actualizar. La descripción
-es obligatoria y admite entre 10 y 200 caracteres, siguiendo la referencia de Facturación.
+es obligatoria y admite entre 15 y 200 caracteres. El formulario de Angular deberá usar
+estos mismos límites. La colección verifica el rechazo de 14 caracteres y la aceptación de 15.
 La capacidad es obligatoria y debe ser mayor a cero.
 
 Los datos inválidos devuelven 400; un id inexistente devuelve 404; un nombre duplicado
@@ -75,6 +76,8 @@ npx.cmd --yes newman run docs/postman/ReservaHotel_TipoHabitacion.postman_collec
 Según la tabla de entidades del plan, `precioNoche` pertenece a `Habitacion`. El modelo de
 dominio implementado usa `BigDecimal`, exige un precio positivo y permite los estados
 `DISPONIBLE` y `MANTENIMIENTO`. También incluye número, piso, tipo y fechas de auditoría.
+El piso debe ser mayor o igual a cero: el cero representa la planta baja. Esta validación
+se aplica tanto al crear como al actualizar una habitación.
 
 Los cinco endpoints de esta colección corresponden a `TipoHabitacion`. La persistencia,
 los puertos y el CRUD de `Habitacion`, así como la comprobación de habitaciones asociadas
@@ -83,7 +86,7 @@ adaptador de tipos ya convierte las restricciones de integridad de la base en un
 
 ## Verificación realizada
 
-El 17 de noviembre de 2026 se verificó `mvnw.cmd package` con 17 pruebas de Java
+El 18 de noviembre de 2026 se verificó `mvnw.cmd package` con 22 pruebas de Java
 sin errores. La colección se ejecutó con Newman contra MySQL: 26 solicitudes y
 70 comprobaciones, todas correctas. Se usó una base temporal independiente y las
 solicitudes de limpieza eliminaron los dos registros creados por la colección.
