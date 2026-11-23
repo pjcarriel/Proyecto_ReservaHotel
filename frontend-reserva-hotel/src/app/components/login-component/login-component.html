@@ -1,0 +1,82 @@
+<div class="pagina">
+
+  <!-- Panel de marca (se oculta en celular) -->
+  <section class="marca-panel" aria-hidden="true">
+    <svg class="arcos" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
+      <circle cx="340" cy="60" r="120" />
+      <circle cx="340" cy="60" r="190" />
+      <circle cx="340" cy="60" r="260" />
+      <circle cx="340" cy="60" r="330" />
+    </svg>
+
+    <div class="marca">
+      <span class="marca-logo"><app-icon nombre="campana" /></span>
+      <span class="marca-nombre">Hotel Reservas</span>
+    </div>
+
+    <div class="mensaje">
+      <p class="etiqueta-dorada">Panel de recepción</p>
+      <h1>Cada llegada,<br />bien recibida.</h1>
+      <p class="mensaje-texto">Gestiona reservas, huéspedes y habitaciones desde un solo lugar.</p>
+    </div>
+
+    <ul class="puntos">
+      <li><app-icon nombre="reservas" /> Reservas con cálculo de IVA</li>
+      <li><app-icon nombre="cama-libre" /> Disponibilidad por fechas</li>
+      <li><app-icon nombre="usuarios" /> Acceso por roles</li>
+    </ul>
+  </section>
+
+  <!-- Formulario -->
+  <main class="lado-form">
+    <form class="tarjeta formulario" [formGroup]="frmLogin" (ngSubmit)="login()" novalidate>
+      <div class="encabezado">
+        <span class="marca-logo solo-movil"><app-icon nombre="campana" /></span>
+        <h2>Iniciar sesión</h2>
+        <p>Ingresa con tu usuario del sistema.</p>
+      </div>
+
+      <div class="grupo">
+        <label for="username">Usuario</label>
+        <div class="control" [class.invalido]="frmLogin.controls.username.touched && frmLogin.controls.username.invalid">
+          <app-icon nombre="usuario" />
+          <input id="username" class="campo" formControlName="username" autocomplete="username" />
+        </div>
+        @if (frmLogin.controls.username.touched && frmLogin.controls.username.invalid) {
+          <small class="ayuda-error">El usuario es obligatorio</small>
+        }
+      </div>
+
+      <div class="grupo">
+        <label for="password">Contraseña</label>
+        <div class="control" [class.invalido]="frmLogin.controls.password.touched && frmLogin.controls.password.invalid">
+          <app-icon nombre="candado" />
+          <input id="password" class="campo" formControlName="password"
+                 [type]="verPassword() ? 'text' : 'password'" autocomplete="current-password" />
+          <button type="button" class="ver" (click)="verPassword.set(!verPassword())"
+                  [attr.aria-label]="verPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                  [attr.aria-pressed]="verPassword()">
+            <app-icon [nombre]="verPassword() ? 'ojo-cerrado' : 'ojo'" />
+          </button>
+        </div>
+        @if (frmLogin.controls.password.touched && frmLogin.controls.password.invalid) {
+          <small class="ayuda-error">La contraseña es obligatoria</small>
+        }
+      </div>
+
+      @if (error()) {
+        <p class="alerta" role="alert"><app-icon nombre="alerta" /> {{ error() }}</p>
+      }
+
+      <button type="submit" class="btn btn-primario entrar" [disabled]="loading()">
+        @if (loading()) {
+          <span class="girando" aria-hidden="true"></span> Ingresando…
+        } @else {
+          Ingresar <app-icon nombre="flecha" />
+        }
+      </button>
+    </form>
+
+    <p class="pie">© {{ anio }} Hotel Reservas · Proyecto académico</p>
+  </main>
+</div>

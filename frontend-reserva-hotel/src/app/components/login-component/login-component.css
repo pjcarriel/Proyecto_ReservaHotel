@@ -1,0 +1,108 @@
+:host { display: block; }
+
+.pagina {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(380px, 1fr) minmax(420px, 1.1fr);
+}
+
+/* ---------- Panel de marca ---------- */
+.marca-panel {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 40px;
+  padding: 40px 48px;
+  background: radial-gradient(120% 90% at 100% 0%, var(--marino-2) 0%, var(--marino) 60%);
+  color: #fff;
+}
+.arcos { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.arcos circle { fill: none; stroke: var(--laton); stroke-opacity: .22; stroke-width: 1; }
+
+.marca { position: relative; display: flex; align-items: center; gap: 12px; }
+.marca-logo {
+  display: grid; place-items: center;
+  width: 40px; height: 40px; border-radius: 12px;
+  background: linear-gradient(145deg, var(--laton-claro), var(--laton));
+  color: var(--marino);
+}
+.marca-logo app-icon { width: 21px; height: 21px; }
+.marca-nombre { font-size: 16px; font-weight: 700; letter-spacing: .01em; }
+
+.mensaje { position: relative; max-width: 420px; }
+.etiqueta-dorada {
+  font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--laton-claro); margin-bottom: 14px;
+}
+.mensaje h1 { font-size: clamp(30px, 3.4vw, 42px); line-height: 1.12; font-weight: 700; letter-spacing: -.02em; }
+.mensaje-texto { margin-top: 16px; font-size: 15px; color: var(--marino-texto); }
+
+.puntos { position: relative; list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.puntos li { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--marino-texto); }
+.puntos app-icon { color: var(--laton-claro); }
+
+/* ---------- Formulario ---------- */
+.lado-form {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 24px; padding: 40px 24px;
+}
+.formulario {
+  width: 100%; max-width: 400px;
+  display: grid; gap: 18px;
+  padding: 32px;
+  box-shadow: var(--sombra);
+}
+.encabezado { display: grid; gap: 6px; margin-bottom: 4px; }
+.encabezado h2 { font-size: 24px; font-weight: 700; letter-spacing: -.01em; }
+.encabezado p { color: var(--texto-tenue); font-size: 13.5px; }
+
+.grupo { display: grid; gap: 7px; }
+.grupo label { font-size: 13px; font-weight: 600; color: var(--texto-suave); }
+
+.control { position: relative; }
+.control > app-icon {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--texto-tenue); pointer-events: none;
+}
+.control .campo { height: 44px; padding-left: 40px; }
+.control:has(.ver) .campo { padding-right: 44px; }
+.control.invalido .campo { border-color: var(--peligro); }
+.control.invalido .campo:focus { box-shadow: 0 0 0 3px var(--peligro-suave); }
+
+.ver {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  display: grid; place-items: center; width: 32px; height: 32px;
+  border: 0; border-radius: 8px; background: none; color: var(--texto-tenue); cursor: pointer;
+}
+.ver:hover { background: var(--superficie-2); color: var(--texto); }
+
+.ayuda-error { color: var(--peligro); font-size: 12.5px; }
+
+.alerta {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; border-radius: 10px;
+  background: var(--peligro-suave); color: var(--peligro);
+  font-size: 13px; font-weight: 500;
+}
+
+.entrar { height: 44px; width: 100%; margin-top: 4px; font-size: 14px; }
+.girando {
+  width: 15px; height: 15px; border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, .35); border-top-color: #fff;
+  animation: girar .7s linear infinite;
+}
+@keyframes girar { to { transform: rotate(360deg); } }
+
+.pie { font-size: 12px; color: var(--texto-tenue); }
+
+.solo-movil { display: none; }
+
+/* ---------- Celular ---------- */
+@media (max-width: 860px) {
+  .pagina { grid-template-columns: 1fr; }
+  .marca-panel { display: none; }
+  .solo-movil { display: grid; margin-bottom: 10px; }
+  .formulario { padding: 26px 22px; }
+}
