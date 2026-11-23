@@ -1,7 +1,9 @@
 package com.example.backend_reservashotel.infrastructure.mappers;
 
 import com.example.backend_reservashotel.domain.models.DetalleReserva;
+import com.example.backend_reservashotel.domain.models.Huesped;
 import com.example.backend_reservashotel.domain.models.Reserva;
+import com.example.backend_reservashotel.infrastructure.controllers.dtos.ReservaResponse;
 import com.example.backend_reservashotel.infrastructure.entities.DetalleReservaEntity;
 import com.example.backend_reservashotel.infrastructure.entities.HabitacionEntity;
 import com.example.backend_reservashotel.infrastructure.entities.HuespedEntity;
@@ -71,5 +73,36 @@ public final class ReservaMapper {
         ety.setNoches(detalleDomain.getNoches());
         ety.setPrecioNoche(detalleDomain.getPrecioNoche());
         ety.setSubtotal(detalleDomain.getSubtotal());
+    }
+
+    public static ReservaResponse toResponse(Reserva r) {
+        List<ReservaResponse.Item> items = r.getDetalles().stream()
+                .map(d -> new ReservaResponse.Item(
+                        d.getHabitacion().getId(),
+                        d.getHabitacion().getNumero(),
+                        d.getHabitacion().getTipoHabitacion().getNombre(),
+                        d.getNoches(),
+                        d.getPrecioNoche(),
+                        d.getSubtotal()
+                ))
+                .toList();
+
+        Huesped h = r.getHuesped();
+        return new ReservaResponse(
+                r.getId(),
+                r.getNumero(),
+                h.getId(),
+                h.getCedula(),
+                h.getNombres() + " " + h.getApellidos(),
+                r.getFechaEntrada(),
+                r.getFechaSalida(),
+                r.getEstado(),
+                items,
+                r.getSubtotal(),
+                r.getIva(),
+                r.getTotal(),
+                r.getCreado(),
+                r.getModificado()
+        );
     }
 }
