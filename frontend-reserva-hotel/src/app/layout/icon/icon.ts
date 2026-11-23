@@ -33,6 +33,11 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
         @case ('llegada') { <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M4 12h11M11 8l4 4-4 4" /> }
         @case ('salida') { <path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M9 12h11M16 8l4 4-4 4" /> }
         @case ('huesped-mas') { <circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6" /> }
+        @case ('usuario') { <circle cx="12" cy="8" r="4" /><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0" /> }
+        @case ('candado') { <rect x="4.5" y="10.5" width="15" height="10" rx="2" /><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3M12 14.5v2.5" /> }
+        @case ('ojo') { <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" /><circle cx="12" cy="12" r="3" /> }
+        @case ('ojo-cerrado') { <path d="M3 3l18 18M10.6 5.6A9.9 9.9 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3 3.8M6.3 6.4A16.6 16.6 0 0 0 2.5 12S6 18.5 12 18.5a9.4 9.4 0 0 0 4.2-1M9.9 9.9a3 3 0 0 0 4.2 4.2" /> }
+        @case ('alerta') { <circle cx="12" cy="12" r="9" /><path d="M12 7.5v5.5M12 16.5h.01" /> }
       }
     </svg>
   `,
