@@ -20,6 +20,37 @@ class HabitacionTests {
     private final TipoHabitacion tipo = TipoHabitacion.nuevo("Doble", "Para dos personas", 2);
 
     @ParameterizedTest
+    @ValueSource(ints = {-1, Integer.MIN_VALUE})
+    void crearYActualizarRechazanPisosNegativosSinModificarLaHabitacion(int piso) {
+        assertThrows(DatoInvalidoException.class,
+                () -> Habitacion.nuevo("101", piso, new BigDecimal("45.50"), EstadoHabitacion.DISPONIBLE, tipo));
+
+        Habitacion actual = Habitacion.nuevo("101", 1, new BigDecimal("45.50"),
+                EstadoHabitacion.DISPONIBLE, tipo);
+
+        assertThrows(DatoInvalidoException.class,
+                () -> actual.actualizar("202", piso, new BigDecimal("60.25"), EstadoHabitacion.MANTENIMIENTO, tipo));
+
+        assertAll(
+                () -> assertEquals("101", actual.getNumero()),
+                () -> assertEquals(1, actual.getPiso()),
+                () -> assertEquals(new BigDecimal("45.50"), actual.getPrecioNoche()),
+                () -> assertTrue(actual.estaDisponible())
+        );
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1, 15})
+    void crearYActualizarPermitenPlantaBajaYPisosPositivos(int piso) {
+        Habitacion actual = Habitacion.nuevo("101", piso, new BigDecimal("45.50"),
+                EstadoHabitacion.DISPONIBLE, tipo);
+        assertEquals(piso, actual.getPiso());
+
+        actual.actualizar("202", piso, new BigDecimal("60.25"), EstadoHabitacion.MANTENIMIENTO, tipo);
+        assertEquals(piso, actual.getPiso());
+    }
+
+    @ParameterizedTest
     @NullSource
     @ValueSource(strings = {"0", "-0.01"})
     void nuevoRechazaUnPrecioAusenteOCeroONegativo(String valor) {
