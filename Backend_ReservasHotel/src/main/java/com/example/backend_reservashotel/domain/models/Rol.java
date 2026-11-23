@@ -1,6 +1,6 @@
 package com.example.backend_reservashotel.domain.models;
 
-// Roles del sistema: el ADMIN gestiona todo, el RECEPCIONISTA atiende reservas y huéspedes
+// Roles permitidos para un usuario del sistema
 public enum Rol {
     ADMIN,
     RECEPCIONISTA

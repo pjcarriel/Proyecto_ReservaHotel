@@ -73,7 +73,7 @@ class UsuarioDetailsServiceTests {
     }
 
     private Usuario usuario(String username, Rol rol, boolean activo) {
-        return new Usuario(1L, username, "Nombre", bcrypt.encode("Admin2026*"), rol, activo,
+        return new Usuario(1L, username, bcrypt.encode("Admin2026*"), rol, activo,
                 LocalDateTime.now(), LocalDateTime.now());
     }
 }

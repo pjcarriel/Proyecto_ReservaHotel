@@ -35,46 +35,42 @@ public class SecurityConfig {
 
     private final JWTServices jwtServices;
 
-    public SecurityConfig(JWTServices jwtServices) {
+    public SecurityConfig(JWTServices jwtServices){
         this.jwtServices = jwtServices;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .cors(Customizer.withDefaults())
+            .csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(ses -> ses.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/error").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/health").permitAll()
-                        // TODO (tarea #27, jueves 26): proteger por rol, por ejemplo
-                        //   .requestMatchers("/api/v1/usuario/**").hasRole("ADMIN")
-                        //   .anyRequest().authenticated()
-                        // Mientras tanto todo sigue abierto para que el equipo pueda probar sin token
-                        .anyRequest().permitAll()
-                )
-                // Respuestas en formato ActionResponse cuando falta el token o no tiene permiso
+                    .requestMatchers("/error").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                    // TODO (tarea #27, jueves 26): proteger por rol y cambiar a .anyRequest().authenticated()
+                    // Mientras tanto todo sigue abierto para que el equipo pueda probar sin token
+                    .anyRequest().permitAll())
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, e) ->
-                                responder(response, HttpServletResponse.SC_UNAUTHORIZED, "Debe iniciar sesión"))
-                        .accessDeniedHandler((request, response, e) ->
-                                responder(response, HttpServletResponse.SC_FORBIDDEN, "No tiene permiso para esta acción")))
+                    .authenticationEntryPoint((request, response, authException) -> {
+                        respuesta(response, HttpServletResponse.SC_UNAUTHORIZED, "Usuario no logeado");
+                    })
+                    .accessDeniedHandler((request, response, accessDeniedException) -> {
+                        respuesta(response, HttpServletResponse.SC_FORBIDDEN, "Acceso denegado");
+                    }))
                 .addFilterBefore(new JWTFilter(jwtServices), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
-    // Usa UsuarioDetailsService y el PasswordEncoder (BCrypt) para validar el login
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
 
-    private static void responder(HttpServletResponse response, int estado, String mensaje) throws IOException {
+    private static void respuesta(HttpServletResponse response, int estado, String mensaje) throws IOException{
         response.setStatus(estado);
         response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("{\"message\":\"" + mensaje + "\",\"result\":null}");
+        response.getWriter().write("{\"message\": \"".concat(mensaje).concat("\", \"result\": null}"));
     }
 
     @Bean

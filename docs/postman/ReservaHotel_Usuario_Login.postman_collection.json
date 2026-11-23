@@ -1,0 +1,245 @@
+{
+  "info": {
+    "name": "ReservaHotel - Usuario y Login JWT",
+    "description": "Prueba el login con JWT y el CRUD de usuarios. Ejecutar en orden con Run collection. El primer paso inicia sesión con el admin inicial (admin / Admin2026*) y guarda el token; las demás peticiones lo envían en el header Authorization.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "usuarioId", "value": "" },
+    { "key": "usernamePrueba", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ]
+  },
+  "item": [
+    {
+      "name": "01 - Login admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 y token', () => {",
+              "    pm.response.to.have.status(200);",
+              "    const r = pm.response.json().result;",
+              "    pm.expect(r.token).to.be.a('string').and.not.empty;",
+              "    pm.expect(r.rol).to.eql('ADMIN');",
+              "    pm.collectionVariables.set('token', r.token);",
+              "});",
+              "pm.collectionVariables.set('usernamePrueba', 'recep' + Date.now());"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": "{{baseUrl}}/api/v1/auth/login",
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin2026*\"\n}" }
+      }
+    },
+    {
+      "name": "02 - Login con password incorrecto (401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": { "type": "text/javascript", "exec": [ "pm.test('401', () => pm.response.to.have.status(401));" ] }
+        }
+      ],
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": "{{baseUrl}}/api/v1/auth/login",
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"incorrecta\"\n}" }
+      }
+    },
+    {
+      "name": "03 - Crear usuario recepcionista",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201 sin password', () => {",
+              "    pm.response.to.have.status(201);",
+              "    const u = pm.response.json().result;",
+              "    pm.expect(u.password).to.be.undefined;",
+              "    pm.expect(u.activo).to.eql(true);",
+              "    pm.collectionVariables.set('usuarioId', u.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": "{{baseUrl}}/api/v1/usuario",
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"{{usernamePrueba}}\",\n  \"password\": \"clave12345\",\n  \"rol\": \"RECEPCIONISTA\"\n}" }
+      }
+    },
+    {
+      "name": "04 - Crear usuario repetido (409)",
+      "event": [
+        {
+          "listen": "test",
+          "script": { "type": "text/javascript", "exec": [ "pm.test('409', () => pm.response.to.have.status(409));" ] }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": "{{baseUrl}}/api/v1/usuario",
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"{{usernamePrueba}}\",\n  \"password\": \"clave12345\",\n  \"rol\": \"RECEPCIONISTA\"\n}" }
+      }
+    },
+    {
+      "name": "05 - Crear usuario con datos inválidos (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": { "type": "text/javascript", "exec": [ "pm.test('400', () => pm.response.to.have.status(400));" ] }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": "{{baseUrl}}/api/v1/usuario",
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"ab\",\n  \"password\": \"corta\"\n}" }
+      }
+    },
+    {
+      "name": "06 - Listar usuarios (con token)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 y lista', () => {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json().result).to.be.an('array').that.is.not.empty;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/usuario" }
+    },
+    {
+      "name": "07 - Buscar usuario por id",
+      "event": [
+        {
+          "listen": "test",
+          "script": { "type": "text/javascript", "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] }
+        }
+      ],
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/usuario/{{usuarioId}}" }
+    },
+    {
+      "name": "08 - Actualizar usuario",
+      "event": [
+        {
+          "listen": "test",
+          "script": { "type": "text/javascript", "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": "{{baseUrl}}/api/v1/usuario/{{usuarioId}}",
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"{{usernamePrueba}}\",\n  \"password\": \"nuevaClave1\",\n  \"rol\": \"RECEPCIONISTA\"\n}" }
+      }
+    },
+    {
+      "name": "09 - Login del recepcionista con el nuevo password",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 y rol RECEPCIONISTA', () => {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json().result.rol).to.eql('RECEPCIONISTA');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": "{{baseUrl}}/api/v1/auth/login",
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"{{usernamePrueba}}\",\n  \"password\": \"nuevaClave1\"\n}" }
+      }
+    },
+    {
+      "name": "10 - Desactivar usuario (PATCH)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 y activo=false', () => {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json().result.activo).to.eql(false);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": "{{baseUrl}}/api/v1/usuario/{{usuarioId}}",
+        "body": { "mode": "raw", "raw": "{\n  \"activo\": false\n}" }
+      }
+    },
+    {
+      "name": "11 - Login de usuario desactivado (401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": { "type": "text/javascript", "exec": [ "pm.test('401', () => pm.response.to.have.status(401));" ] }
+        }
+      ],
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": "{{baseUrl}}/api/v1/auth/login",
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"{{usernamePrueba}}\",\n  \"password\": \"nuevaClave1\"\n}" }
+      }
+    },
+    {
+      "name": "12 - Eliminar usuario de prueba",
+      "event": [
+        {
+          "listen": "test",
+          "script": { "type": "text/javascript", "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] }
+        }
+      ],
+      "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/usuario/{{usuarioId}}" }
+    },
+    {
+      "name": "13 - Buscar usuario eliminado (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": { "type": "text/javascript", "exec": [ "pm.test('404', () => pm.response.to.have.status(404));" ] }
+        }
+      ],
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/usuario/{{usuarioId}}" }
+    }
+  ]
+}

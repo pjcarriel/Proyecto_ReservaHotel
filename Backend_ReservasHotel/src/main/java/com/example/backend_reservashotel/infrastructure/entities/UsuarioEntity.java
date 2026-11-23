@@ -1,22 +1,12 @@
 package com.example.backend_reservashotel.infrastructure.entities;
 
 import com.example.backend_reservashotel.domain.models.Rol;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "usuario")
@@ -33,14 +23,9 @@ public class UsuarioEntity {
 
     @Setter
     @Column(nullable = false, length = 100)
-    private String nombre;
-
-    // Hash BCrypt (60 caracteres)
-    @Setter
-    @Column(nullable = false, length = 100)
     private String password;
 
-    // Se guarda el nombre del rol (ADMIN, RECEPCIONISTA) y no su posición
+    // Se guarda el nombre del rol (ADMIN, RECEPCIONISTA) y no su posicion
     @Setter
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -50,20 +35,20 @@ public class UsuarioEntity {
     @Column(nullable = false)
     private boolean activo;
 
-    @Column(nullable = false, updatable = false)
+    //Campos de Auditoria
+    @Column(nullable = false)
     private LocalDateTime creado;
 
     @Column(nullable = false)
     private LocalDateTime modificado;
 
     @PrePersist
-    private void alCrear() {
-        this.creado = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS);
+    private void alCrear(){
+        this.creado = LocalDateTime.now();
         this.modificado = this.creado;
     }
-
     @PreUpdate
-    private void alModificar() {
-        this.modificado = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS);
+    private void alModificar(){
+        this.modificado = LocalDateTime.now();
     }
 }

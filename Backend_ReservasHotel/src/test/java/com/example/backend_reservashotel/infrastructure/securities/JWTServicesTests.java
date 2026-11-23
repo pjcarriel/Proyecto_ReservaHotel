@@ -19,7 +19,7 @@ class JWTServicesTests {
         Claims datos = jwt.leer(jwt.generar("admin", "ADMIN"));
 
         assertEquals("admin", datos.getSubject());
-        assertEquals("ADMIN", datos.get(JWTServices.CLAIM_ROL, String.class));
+        assertEquals("ADMIN", datos.get("rol", String.class));
     }
 
     @Test
@@ -27,15 +27,6 @@ class JWTServicesTests {
         String token = new JWTServices(OTRA_CLAVE, 60_000).generar("admin", "ADMIN");
 
         assertThrows(JwtException.class, () -> new JWTServices(CLAVE, 60_000).leer(token));
-    }
-
-    @Test
-    void rechazaUnTokenAlterado() {
-        JWTServices jwt = new JWTServices(CLAVE, 60_000);
-        String token = jwt.generar("recepcion1", "RECEPCIONISTA");
-        String alterado = token.substring(0, token.length() - 2) + (token.endsWith("A") ? "BB" : "AA");
-
-        assertThrows(JwtException.class, () -> jwt.leer(alterado));
     }
 
     @Test

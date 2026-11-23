@@ -4,9 +4,10 @@ import com.example.backend_reservashotel.application.ports.out.PasswordOut;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-// Implementa PasswordOut con el BCryptPasswordEncoder definido en SecurityConfig
 @Component
+// Implementa el puerto PasswordOut usando BCrypt (PasswordEncoder de SecurityConfig)
 public class PasswordAdapter implements PasswordOut {
+
     private final PasswordEncoder passwordEncoder;
 
     public PasswordAdapter(PasswordEncoder passwordEncoder) {

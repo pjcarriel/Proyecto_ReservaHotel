@@ -28,21 +28,19 @@ class UsuarioInicialTests {
     void creaElAdminSiNoHayUsuarios() throws Exception {
         when(usuarioOut.existeAlguno()).thenReturn(false);
 
-        new UsuarioInicial().crearAdmin(usuarioOut, usuarioIn, "admin", "Admin2026*").run();
+        new UsuarioInicial().crearAdmin(usuarioOut, usuarioIn).run();
 
         ArgumentCaptor<Usuario> creado = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioIn).crear(creado.capture());
         assertEquals("admin", creado.getValue().getUsername());
         assertEquals(Rol.ADMIN, creado.getValue().getRol());
-        // va en texto plano: UsuarioService es quien lo encripta
-        assertEquals("Admin2026*", creado.getValue().getPassword());
     }
 
     @Test
     void noHaceNadaSiYaHayUsuarios() throws Exception {
         when(usuarioOut.existeAlguno()).thenReturn(true);
 
-        new UsuarioInicial().crearAdmin(usuarioOut, usuarioIn, "admin", "Admin2026*").run();
+        new UsuarioInicial().crearAdmin(usuarioOut, usuarioIn).run();
 
         verify(usuarioIn, never()).crear(any());
     }

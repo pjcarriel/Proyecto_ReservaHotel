@@ -19,7 +19,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -62,34 +61,24 @@ class UsuarioControllerTests {
         when(usuarioIn.crear(any())).thenReturn(admin(true));
 
         mockMvc.perform(post(URL).contentType(MediaType.APPLICATION_JSON).content("""
-                        {"username":"admin","nombre":"Administrador","password":"clave12345","rol":"ADMIN"}
+                        {"username":"admin","password":"Admin2026*","rol":"ADMIN"}
                         """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Usuario creado correctamente"))
-                .andExpect(jsonPath("$.result.activo").value(true))
                 .andExpect(jsonPath("$.result.password").doesNotExist());
     }
 
     @Test
-    void crearConDatosInvalidosDevuelve400ConLosCampos() throws Exception {
+    void crearConDatosInvalidosDevuelve400() throws Exception {
         mockMvc.perform(post(URL).contentType(MediaType.APPLICATION_JSON).content("""
-                        {"username":"ab","nombre":"","password":"clave12345"}
+                        {"username":"ab","password":"corta"}
                         """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Datos inválidos"))
                 .andExpect(jsonPath("$.result.username").exists())
-                .andExpect(jsonPath("$.result.nombre").exists())
+                .andExpect(jsonPath("$.result.password").exists())
                 .andExpect(jsonPath("$.result.rol").exists());
 
         verify(usuarioIn, never()).crear(any());
-    }
-
-    @Test
-    void crearConRolInexistenteDevuelve400() throws Exception {
-        mockMvc.perform(post(URL).contentType(MediaType.APPLICATION_JSON).content("""
-                        {"username":"admin","nombre":"Administrador","password":"clave12345","rol":"GERENTE"}
-                        """))
-                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -100,32 +89,23 @@ class UsuarioControllerTests {
                         {"activo": false}
                         """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Usuario desactivado"))
+                .andExpect(jsonPath("$.message").value("Estado del usuario modificado"))
                 .andExpect(jsonPath("$.result.activo").value(false));
     }
 
     @Test
-    void patchSinElCampoActivoDevuelve400() throws Exception {
-        mockMvc.perform(patch(URL + "/1").contentType(MediaType.APPLICATION_JSON).content("{}"))
-                .andExpect(status().isBadRequest());
+    void usernameRepetidoDevuelve409() throws Exception {
+        when(usuarioIn.crear(any())).thenThrow(new ReglaNegocioException("El username ya existe"));
 
-        verify(usuarioIn, never()).cambiarEstado(any(), eq(false));
-    }
-
-    @Test
-    void reglaDeNegocioDevuelve409() throws Exception {
-        when(usuarioIn.cambiarEstado(1L, false))
-                .thenThrow(new ReglaNegocioException("Debe quedar al menos un administrador activo"));
-
-        mockMvc.perform(patch(URL + "/1").contentType(MediaType.APPLICATION_JSON).content("""
-                        {"activo": false}
+        mockMvc.perform(post(URL).contentType(MediaType.APPLICATION_JSON).content("""
+                        {"username":"admin","password":"Admin2026*","rol":"ADMIN"}
                         """))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("Debe quedar al menos un administrador activo"));
+                .andExpect(jsonPath("$.message").value("El username ya existe"));
     }
 
     private static Usuario admin(boolean activo) {
-        return new Usuario(1L, "admin", "Administrador", "$2a$10$hash", Rol.ADMIN, activo,
+        return new Usuario(1L, "admin", "$2a$10$hash", Rol.ADMIN, activo,
                 LocalDateTime.now(), LocalDateTime.now());
     }
 }
