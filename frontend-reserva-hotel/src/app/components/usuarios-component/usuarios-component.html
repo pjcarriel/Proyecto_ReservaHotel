@@ -1,11 +1,177 @@
 <app-page-header titulo="Usuarios" descripcion="Cuentas del sistema, roles y acceso." icono="usuarios">
-  <button type="button" class="btn btn-primario" disabled>
+  <button type="button" class="btn btn-primario" (click)="nuevo()" [disabled]="ocupado()">
     <app-icon nombre="mas" /> Nuevo usuario
   </button>
 </app-page-header>
 
-<!-- TODO (tarea #21, Pamela): reemplazar por la tabla real con las mismas clases (.tarjeta, .campo, .tabla, .estado) -->
-<app-en-construccion
-  [columnas]="['Usuario', 'Rol', 'Estado', 'Creado', 'Acciones']"
-  buscar="Buscar por usuario o nombre…"
-  responsable="Pamela · tarea #21" />
+<!-- Resumen -->
+<div class="resumen">
+  <div class="dato"><span class="dato-valor">{{ resumen().total }}</span><span class="dato-texto">Usuarios</span></div>
+  <div class="dato"><span class="dato-valor exito">{{ resumen().activos }}</span><span class="dato-texto">Activos</span></div>
+  <div class="dato"><span class="dato-valor laton">{{ resumen().admins }}</span><span class="dato-texto">Administradores</span></div>
+</div>
+
+@if (mensajeExito()) {
+  <div class="mensaje mensaje-exito" role="status">
+    <span>{{ mensajeExito() }}</span>
+    <button type="button" class="cerrar-mensaje" aria-label="Cerrar mensaje" (click)="mensajeExito.set(null)">×</button>
+  </div>
+}
+
+@if (errorListado()) {
+  <div class="mensaje mensaje-error" role="alert">
+    <app-icon nombre="alerta" />
+    <span>{{ errorListado() }}</span>
+    <button type="button" class="btn btn-secundario" (click)="cargarUsuarios()" [disabled]="ocupado()">Reintentar</button>
+  </div>
+}
+
+<section class="tarjeta" aria-labelledby="titulo-listado" [attr.aria-busy]="cargando()">
+  <div class="tarjeta-cabecera">
+    <div>
+      <h2 id="titulo-listado">Cuentas registradas</h2>
+      <p>{{ usuariosFiltrados().length }} de {{ usuarios().length }} usuarios</p>
+    </div>
+    <label class="buscador">
+      <span class="solo-lectores">Buscar usuarios</span>
+      <app-icon nombre="buscar" />
+      <input #buscar type="search" class="campo" placeholder="Buscar por usuario…"
+             [value]="busqueda()" (input)="busqueda.set(buscar.value)" />
+    </label>
+  </div>
+
+  @if (cargando()) {
+    <p class="solo-lectores" role="status">Cargando usuarios…</p>
+    <div class="filas-carga" aria-hidden="true">
+      @for (fila of [1, 2, 3]; track fila) {
+        <div class="fila-carga"><span class="esqueleto"></span><span class="esqueleto"></span><span class="esqueleto"></span></div>
+      }
+    </div>
+  } @else if (usuarios().length === 0) {
+    <div class="vacio">
+      <div class="vacio-icono"><app-icon nombre="usuarios" /></div>
+      <strong>No hay usuarios para mostrar</strong>
+      <p>Crea una cuenta para el personal de recepción.</p>
+    </div>
+  } @else if (usuariosFiltrados().length === 0) {
+    <div class="vacio">
+      <div class="vacio-icono"><app-icon nombre="buscar" /></div>
+      <strong>No se encontraron coincidencias</strong>
+      <button type="button" class="btn btn-secundario" (click)="busqueda.set('')">Limpiar búsqueda</button>
+    </div>
+  } @else {
+    <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Listado de usuarios">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th scope="col">Usuario</th>
+            <th scope="col">Rol</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Creado</th>
+            <th scope="col" class="columna-acciones">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of usuariosFiltrados(); track u.id) {
+            <tr [class.inactivo]="!u.activo">
+              <td>
+                <span class="usuario">
+                  <span class="avatar">{{ u.username.charAt(0) }}</span>
+                  <span class="usuario-nombre">{{ u.username }}</span>
+                  @if (esUsuarioActual(u)) { <span class="etiqueta">Tú</span> }
+                </span>
+              </td>
+              <td><span class="rol" [class.rol-admin]="u.rol === 'ADMIN'">{{ rolTexto(u.rol) }}</span></td>
+              <td>
+                <span class="estado" [class.estado-exito]="u.activo" [class.estado-peligro]="!u.activo">
+                  {{ u.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td class="fecha">{{ u.creado | date: 'dd/MM/yyyy' }}</td>
+              <td>
+                <div class="acciones-fila">
+                  <button type="button" class="btn btn-secundario accion" [disabled]="ocupado()"
+                          [attr.aria-label]="'Editar ' + u.username" (click)="editar(u)">Editar</button>
+                  <button type="button" class="btn accion"
+                          [class.accion-peligro]="u.activo" [class.accion-exito]="!u.activo"
+                          [disabled]="ocupado() || esUsuarioActual(u)"
+                          [attr.title]="esUsuarioActual(u) ? 'No puedes desactivar tu propia cuenta' : null"
+                          [attr.aria-label]="(u.activo ? 'Desactivar ' : 'Activar ') + u.username"
+                          (click)="cambiarEstado(u)">
+                    @if (cambiandoEstado() === u.id) { Guardando… } @else { {{ u.activo ? 'Desactivar' : 'Activar' }} }
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+<!-- Formulario crear / editar -->
+<dialog #editor class="modal" aria-labelledby="titulo-formulario" (cancel)="$event.preventDefault(); cerrarFormulario()">
+  <form [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+    <div class="modal-cabecera">
+      <div>
+        <p class="sobretitulo">Cuenta del sistema</p>
+        <h2 id="titulo-formulario">{{ idEditando() === null ? 'Nuevo usuario' : 'Editar usuario' }}</h2>
+      </div>
+      <button type="button" class="cerrar" aria-label="Cerrar" (click)="cerrarFormulario()">×</button>
+    </div>
+
+    <div class="modal-cuerpo">
+      <div class="grupo">
+        <label for="username">Usuario</label>
+        <input id="username" class="campo" formControlName="username" autocomplete="off" [class.error]="invalido('username')" />
+        @if (invalido('username')) {
+          <small class="ayuda-error">Entre 4 y 30 caracteres, sin espacios.</small>
+        }
+      </div>
+
+      <div class="grupo">
+        <label for="password">{{ idEditando() === null ? 'Contraseña' : 'Nueva contraseña' }}</label>
+        <div class="con-boton">
+          <input id="password" class="campo" formControlName="password" autocomplete="new-password"
+                 [type]="verPassword() ? 'text' : 'password'" [class.error]="invalido('password')" />
+          <button type="button" class="ver" (click)="verPassword.set(!verPassword())"
+                  [attr.aria-label]="verPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+            <app-icon [nombre]="verPassword() ? 'ojo-cerrado' : 'ojo'" />
+          </button>
+        </div>
+        @if (invalido('password')) {
+          <small class="ayuda-error">Mínimo 8 caracteres.</small>
+        } @else if (idEditando() !== null) {
+          <small class="ayuda">Al editar también debes escribir la contraseña.</small>
+        }
+      </div>
+
+      <fieldset class="grupo">
+        <legend>Rol</legend>
+        <div class="opciones-rol">
+          @for (r of roles; track r) {
+            <label class="opcion-rol">
+              <input type="radio" formControlName="rol" [value]="r" />
+              <span>
+                <strong>{{ rolTexto(r) }}</strong>
+                <small>{{ r === 'ADMIN' ? 'Acceso total, incluido Usuarios' : 'Reservas, huéspedes y habitaciones' }}</small>
+              </span>
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      @if (errorFormulario()) {
+        <p class="mensaje mensaje-error" role="alert"><app-icon nombre="alerta" /> {{ errorFormulario() }}</p>
+      }
+    </div>
+
+    <div class="modal-pie">
+      <button type="button" class="btn btn-secundario" (click)="cerrarFormulario()" [disabled]="guardando()">Cancelar</button>
+      <button type="submit" class="btn btn-primario" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : (idEditando() === null ? 'Crear usuario' : 'Guardar cambios') }}
+      </button>
+    </div>
+  </form>
+</dialog>

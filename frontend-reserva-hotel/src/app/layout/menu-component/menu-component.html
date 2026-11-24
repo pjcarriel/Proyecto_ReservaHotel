@@ -40,7 +40,20 @@
       }
     </nav>
 
-    <!-- TODO (tarea #21): nombre de usuario, rol y botón cerrar sesión -->
+    <!-- Usuario de la sesión -->
+    @if (usuario(); as u) {
+      <div class="sesion">
+        <span class="avatar" [attr.title]="colapsado() ? u.username + ' · ' + rolTexto() : null">{{ inicial() }}</span>
+        <span class="sesion-texto">
+          <span class="sesion-nombre">{{ u.username }}</span>
+          <span class="sesion-rol">{{ rolTexto() }}</span>
+        </span>
+        <button type="button" class="salir" (click)="cerrarSesion()" aria-label="Cerrar sesión" title="Cerrar sesión">
+          <app-icon nombre="salida" />
+        </button>
+      </div>
+    }
+
     <button type="button" class="api" [attr.data-estado]="estadoApi()" (click)="verificarApi()"
             title="Volver a comprobar la conexión con el backend">
       <span class="punto"></span>
