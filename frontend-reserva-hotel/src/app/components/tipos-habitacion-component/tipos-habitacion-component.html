@@ -1,11 +1,328 @@
-<app-page-header titulo="Tipos de habitación" descripcion="Categorías de habitación, capacidad y descripción." icono="tipos">
-  <button type="button" class="btn btn-primario" disabled>
+<app-page-header
+  titulo="Tipos de habitación"
+  descripcion="Categorías de habitación, capacidad y descripción."
+  icono="tipos"
+>
+  <button type="button" class="btn btn-primario" (click)="nuevo()" [disabled]="ocupado()">
     <app-icon nombre="mas" /> Nuevo tipo
   </button>
 </app-page-header>
 
-<!-- TODO (tarea #19, Stalin): reemplazar por la tabla real con las mismas clases (.tarjeta, .campo, .tabla, .estado) -->
-<app-en-construccion
-  [columnas]="['Nombre', 'Descripción', 'Capacidad', 'Acciones']"
-  buscar="Buscar por nombre…"
-  responsable="Stalin · tarea #19" />
+@if (mensajeExito()) {
+  <div class="mensaje mensaje-exito" role="status">
+    <span>{{ mensajeExito() }}</span>
+    <button
+      type="button"
+      class="cerrar-mensaje"
+      aria-label="Cerrar mensaje"
+      (click)="mensajeExito.set(null)"
+    >
+      ×
+    </button>
+  </div>
+}
+
+@if (errorListado()) {
+  <div class="mensaje mensaje-error" role="alert">
+    <app-icon nombre="alerta" />
+    <span>{{ errorListado() }}</span>
+    <button type="button" class="btn btn-secundario" (click)="cargarTipos()" [disabled]="ocupado()">
+      Reintentar
+    </button>
+  </div>
+}
+
+<section class="tarjeta" aria-labelledby="titulo-listado" [attr.aria-busy]="cargando()">
+  <div class="tarjeta-cabecera">
+    <div>
+      <h2 id="titulo-listado">Tipos registrados</h2>
+      <p>{{ tiposFiltrados().length }} de {{ tipos().length }} tipos de habitación</p>
+    </div>
+    <div class="herramientas">
+      <label class="buscador">
+        <span class="solo-lectores">Buscar tipos</span>
+        <app-icon nombre="buscar" />
+        <input
+          #buscar
+          type="search"
+          class="campo"
+          placeholder="Buscar por nombre o descripción…"
+          [value]="busqueda()"
+          (input)="busqueda.set(buscar.value)"
+        />
+      </label>
+      <button
+        type="button"
+        class="btn btn-secundario"
+        (click)="cargarTipos()"
+        [disabled]="ocupado()"
+      >
+        {{ cargando() ? 'Actualizando…' : 'Actualizar' }}
+      </button>
+    </div>
+  </div>
+
+  @if (cargando()) {
+    <p class="cargando-texto" role="status">Cargando tipos de habitación…</p>
+    <div class="filas-carga" aria-hidden="true">
+      @for (fila of [1, 2, 3]; track fila) {
+        <div class="fila-carga">
+          <span class="esqueleto"></span><span class="esqueleto"></span
+          ><span class="esqueleto"></span>
+        </div>
+      }
+    </div>
+  } @else if (errorListado() && tipos().length === 0) {
+    <div class="vacio">
+      <div class="vacio-icono"><app-icon nombre="alerta" /></div>
+      <strong>El listado no está disponible</strong>
+      <p>Usa «Reintentar» para volver a cargar los tipos de habitación.</p>
+    </div>
+  } @else if (tipos().length === 0) {
+    <div class="vacio">
+      <div class="vacio-icono"><app-icon nombre="tipos" /></div>
+      <strong>Aún no hay tipos de habitación</strong>
+      <p>Crea la primera categoría y define cuántas personas puede alojar.</p>
+      <button type="button" class="btn btn-primario" (click)="nuevo()">
+        <app-icon nombre="mas" /> Crear primer tipo
+      </button>
+    </div>
+  } @else if (tiposFiltrados().length === 0) {
+    <div class="vacio">
+      <div class="vacio-icono"><app-icon nombre="buscar" /></div>
+      <strong>No se encontraron coincidencias</strong>
+      <p>Prueba otro nombre o una palabra de la descripción.</p>
+      <button type="button" class="btn btn-secundario" (click)="busqueda.set('')">
+        Limpiar búsqueda
+      </button>
+    </div>
+  } @else {
+    <div
+      class="tabla-contenedor"
+      tabindex="0"
+      role="region"
+      aria-label="Listado de tipos de habitación"
+    >
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col">Descripción</th>
+            <th scope="col">Capacidad</th>
+            <th scope="col" class="columna-acciones">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (tipo of tiposFiltrados(); track tipo.id) {
+            <tr>
+              <td class="nombre-tipo">{{ tipo.nombre }}</td>
+              <td class="descripcion-tipo">{{ tipo.descripcion }}</td>
+              <td>
+                <span class="etiqueta"
+                  ><app-icon nombre="huespedes" /> {{ tipo.capacidad }}
+                  {{ tipo.capacidad === 1 ? 'persona' : 'personas' }}</span
+                >
+              </td>
+              <td>
+                <div class="acciones-fila">
+                  <button
+                    type="button"
+                    class="btn btn-secundario accion"
+                    [attr.aria-label]="'Editar ' + tipo.nombre"
+                    [disabled]="ocupado()"
+                    (click)="editar(tipo)"
+                  >
+                    {{ cargandoEdicion() === tipo.id ? 'Abriendo…' : 'Editar' }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn accion accion-peligro"
+                    [attr.aria-label]="'Eliminar ' + tipo.nombre"
+                    [disabled]="ocupado()"
+                    (click)="solicitarEliminar(tipo)"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+<dialog
+  #editor
+  class="modal"
+  aria-labelledby="titulo-formulario-tipo"
+  (cancel)="$event.preventDefault(); cerrarFormulario()"
+>
+  <div class="modal-cabecera">
+    <div>
+      <p class="sobretitulo">Categoría de habitación</p>
+      <h2 id="titulo-formulario-tipo">
+        {{ idEditando() === null ? 'Nuevo tipo de habitación' : 'Editar tipo de habitación' }}
+      </h2>
+    </div>
+    <button
+      type="button"
+      class="cerrar-modal"
+      aria-label="Cerrar formulario"
+      [disabled]="guardando()"
+      (click)="cerrarFormulario()"
+    >
+      ×
+    </button>
+  </div>
+  <form [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+    <div class="modal-cuerpo">
+      @if (errorFormulario()) {
+        <div class="mensaje mensaje-error" role="alert">
+          <app-icon nombre="alerta" /><span>{{ errorFormulario() }}</span>
+        </div>
+      }
+      <fieldset [disabled]="guardando()" class="campos-formulario">
+        <div class="grupo-campo">
+          <label for="tipo-nombre">Nombre <span aria-hidden="true">*</span></label>
+          <input
+            id="tipo-nombre"
+            class="campo"
+            formControlName="nombre"
+            required
+            maxlength="60"
+            autofocus
+            placeholder="Ej. Doble estándar"
+            [class.campo-invalido]="invalido('nombre')"
+            [attr.aria-invalid]="invalido('nombre') ? 'true' : null"
+            aria-describedby="error-tipo-nombre"
+          />
+          @if (invalido('nombre')) {
+            <p id="error-tipo-nombre" class="error-campo">
+              {{
+                formulario.controls.nombre.hasError('maxlength')
+                  ? 'El nombre admite hasta 60 caracteres.'
+                  : 'El nombre es obligatorio.'
+              }}
+            </p>
+          }
+        </div>
+        <div class="grupo-campo">
+          <label for="tipo-capacidad">Capacidad <span aria-hidden="true">*</span></label>
+          <input
+            id="tipo-capacidad"
+            class="campo"
+            type="number"
+            formControlName="capacidad"
+            required
+            min="1"
+            step="1"
+            [class.campo-invalido]="invalido('capacidad')"
+            [attr.aria-invalid]="invalido('capacidad') ? 'true' : null"
+            aria-describedby="ayuda-tipo-capacidad error-tipo-capacidad"
+          />
+          <p id="ayuda-tipo-capacidad" class="ayuda-campo">Personas por habitación.</p>
+          @if (invalido('capacidad')) {
+            <p id="error-tipo-capacidad" class="error-campo">
+              Ingresa un número entero mayor que cero.
+            </p>
+          }
+        </div>
+        <div class="grupo-campo descripcion-formulario">
+          <label for="tipo-descripcion">Descripción <span aria-hidden="true">*</span></label>
+          <textarea
+            id="tipo-descripcion"
+            class="campo"
+            formControlName="descripcion"
+            required
+            minlength="15"
+            maxlength="200"
+            rows="4"
+            placeholder="Describe las características de esta categoría."
+            [class.campo-invalido]="invalido('descripcion')"
+            [attr.aria-invalid]="invalido('descripcion') ? 'true' : null"
+            aria-describedby="ayuda-tipo-descripcion error-tipo-descripcion"
+          ></textarea>
+          <div class="ayuda-descripcion">
+            <p id="ayuda-tipo-descripcion" class="ayuda-campo">Entre 15 y 200 caracteres.</p>
+            <span>{{ formulario.controls.descripcion.value.length }} / 200</span>
+          </div>
+          @if (invalido('descripcion')) {
+            <p id="error-tipo-descripcion" class="error-campo">
+              Escribe una descripción de entre 15 y 200 caracteres.
+            </p>
+          }
+        </div>
+      </fieldset>
+    </div>
+    <div class="modal-pie">
+      <button
+        type="button"
+        class="btn btn-secundario"
+        [disabled]="guardando()"
+        (click)="cerrarFormulario()"
+      >
+        Cancelar
+      </button>
+      <button type="submit" class="btn btn-primario" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : 'Guardar tipo' }}
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<dialog
+  #confirmacion
+  class="modal modal-confirmacion"
+  aria-labelledby="titulo-eliminar-tipo"
+  (cancel)="$event.preventDefault(); cancelarEliminacion()"
+>
+  <div class="modal-cabecera">
+    <div>
+      <p class="sobretitulo">Confirmación</p>
+      <h2 id="titulo-eliminar-tipo">Eliminar tipo de habitación</h2>
+    </div>
+    <button
+      type="button"
+      class="cerrar-modal"
+      aria-label="Cerrar confirmación"
+      [disabled]="eliminando()"
+      (click)="cancelarEliminacion()"
+    >
+      ×
+    </button>
+  </div>
+  <div class="modal-cuerpo">
+    <p>
+      ¿Quieres eliminar <strong>«{{ tipoAEliminar()?.nombre }}»</strong>?
+    </p>
+    <p class="explicacion-eliminar">
+      Esta acción no se puede deshacer. Los tipos con habitaciones asociadas no se pueden eliminar.
+    </p>
+    @if (errorEliminacion()) {
+      <div class="mensaje mensaje-error" role="alert">
+        <app-icon nombre="alerta" /><span>{{ errorEliminacion() }}</span>
+      </div>
+    }
+  </div>
+  <div class="modal-pie">
+    <button
+      type="button"
+      class="btn btn-secundario"
+      autofocus
+      [disabled]="eliminando()"
+      (click)="cancelarEliminacion()"
+    >
+      Cancelar
+    </button>
+    <button
+      type="button"
+      class="btn btn-peligro"
+      [disabled]="eliminando()"
+      (click)="confirmarEliminar()"
+    >
+      {{ eliminando() ? 'Eliminando…' : 'Sí, eliminar' }}
+    </button>
+  </div>
+</dialog>
