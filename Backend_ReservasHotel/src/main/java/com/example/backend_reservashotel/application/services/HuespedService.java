@@ -2,6 +2,7 @@ package com.example.backend_reservashotel.application.services;
 
 import com.example.backend_reservashotel.application.ports.in.HuespedIn;
 import com.example.backend_reservashotel.application.ports.out.HuespedOut;
+import com.example.backend_reservashotel.application.ports.out.ReservaOut;
 import com.example.backend_reservashotel.domain.exception.RecursoNoEncontradoException;
 import com.example.backend_reservashotel.domain.exception.ReglaNegocioException;
 import com.example.backend_reservashotel.domain.models.Huesped;
@@ -15,9 +16,11 @@ import java.util.List;
 public class HuespedService implements HuespedIn {
 
     private final HuespedOut huespedOut;
+    private final ReservaOut reservaOut;
 
-    public HuespedService(HuespedOut huespedOut) {
+    public HuespedService(HuespedOut huespedOut, ReservaOut reservaOut) {
         this.huespedOut = huespedOut;
+        this.reservaOut = reservaOut;
     }
 
     @Override
@@ -65,7 +68,9 @@ public class HuespedService implements HuespedIn {
     @Override
     public void eliminar(Long id) {
         buscarPorId(id);
-        // TODO (viernes 20): validar con ReservaOut que el huésped no tenga reservas antes de eliminar
+        if (reservaOut.existePorHuesped(id)) {
+            throw new ReglaNegocioException("El huésped tiene reservas registradas");
+        }
         huespedOut.eliminar(id);
     }
 

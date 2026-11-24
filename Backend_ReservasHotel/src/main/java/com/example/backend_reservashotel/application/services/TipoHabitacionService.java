@@ -1,6 +1,7 @@
 package com.example.backend_reservashotel.application.services;
 
 import com.example.backend_reservashotel.application.ports.in.TipoHabitacionIn;
+import com.example.backend_reservashotel.application.ports.out.HabitacionOut;
 import com.example.backend_reservashotel.application.ports.out.TipoHabitacionOut;
 import com.example.backend_reservashotel.domain.exception.RecursoNoEncontradoException;
 import com.example.backend_reservashotel.domain.exception.ReglaNegocioException;
@@ -14,9 +15,11 @@ import java.util.List;
 @Transactional
 public class TipoHabitacionService implements TipoHabitacionIn {
     private final TipoHabitacionOut tipoHabitacionOut;
+    private final HabitacionOut habitacionOut;
 
-    public TipoHabitacionService(TipoHabitacionOut tipoHabitacionOut) {
+    public TipoHabitacionService(TipoHabitacionOut tipoHabitacionOut, HabitacionOut habitacionOut) {
         this.tipoHabitacionOut = tipoHabitacionOut;
+        this.habitacionOut = habitacionOut;
     }
 
     @Override
@@ -53,6 +56,9 @@ public class TipoHabitacionService implements TipoHabitacionIn {
     @Override
     public void eliminar(Long id) {
         buscarPorId(id);
+        if (habitacionOut.existePorTipoHabitacion(id)) {
+            throw new ReglaNegocioException("No se puede eliminar el tipo de habitación porque tiene habitaciones asociadas");
+        }
         tipoHabitacionOut.eliminar(id);
     }
 

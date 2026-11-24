@@ -1,0 +1,1411 @@
+{
+  "info": {
+    "name": "Reserva Hotel - CRUD Habitacion",
+    "description": "Prueba el CRUD de Habitacion, sus validaciones, cambio de tipo, numero unico y bloqueo de eliminacion de tipos con habitaciones. Ejecutar completa en orden. Los nombres e ids se generan automaticamente y se eliminan solo los datos propios de la prueba. Las operaciones de modificacion producen registros de AuditoriaAspect; las consultas de tipos producen mediciones de TimeAspect en los logs del backend.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "tipoA",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoB",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "habitacionA",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "habitacionB",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "numeroA",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "numeroB",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "numeroDuplicado",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "nombreTipoA",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "nombreTipoB",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "creadoOriginal",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('Formato ActionResponse', function () {",
+          "    const body = pm.response.json();",
+          "    pm.expect(body).to.have.property('message').that.is.a('string');",
+          "    pm.expect(body).to.have.property('result');",
+          "});"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Preparar y consultar",
+      "item": [
+        {
+          "name": "01 - Crear tipo A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/tipo-habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"{{nombreTipoA}}\",\n  \"descripcion\": \"Tipo de habitacion creado para pruebas de Postman\",\n  \"capacidad\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const sufijo = Date.now().toString(36) + '-' + Math.floor(Math.random() * 65536).toString(16);",
+                  "pm.collectionVariables.set('nombreTipoA', 'Tipo A ' + sufijo);",
+                  "pm.collectionVariables.set('nombreTipoB', 'Tipo B ' + sufijo);",
+                  "pm.collectionVariables.set('numeroA', 'A-' + sufijo);",
+                  "pm.collectionVariables.set('numeroDuplicado', ('A-' + sufijo).toLowerCase());",
+                  "pm.collectionVariables.set('numeroB', 'B-' + sufijo);",
+                  "['tipoA', 'tipoB', 'habitacionA', 'habitacionB', 'creadoOriginal'].forEach(key => pm.collectionVariables.unset(key));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) pm.collectionVariables.set('tipoA', pm.response.json().result.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 - Crear tipo B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/tipo-habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"{{nombreTipoB}}\",\n  \"descripcion\": \"Tipo de habitacion creado para pruebas de Postman\",\n  \"capacidad\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) pm.collectionVariables.set('tipoB', pm.response.json().result.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 - Crear habitacion en planta baja",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroA}}\",\n  \"piso\": 0,\n  \"precioNoche\": 45.5,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) {",
+                  "    const h = pm.response.json().result;",
+                  "    pm.collectionVariables.set('habitacionA', h.id);",
+                  "    pm.collectionVariables.set('creadoOriginal', h.creado);",
+                  "}",
+                  "pm.test('Guarda piso cero precio tipo y auditoria', function () {",
+                  "    const h = pm.response.json().result;",
+                  "    pm.expect(h.id).to.be.a('number').above(0);",
+                  "    pm.expect(h.piso).to.eql(0);",
+                  "    pm.expect(h.precioNoche).to.eql(45.5);",
+                  "    pm.expect(h.tipoHabitacionId).to.eql(Number(pm.collectionVariables.get('tipoA')));",
+                  "    pm.expect(h.tipoHabitacionNombre).to.eql(pm.collectionVariables.get('nombreTipoA'));",
+                  "    pm.expect(h.estado).to.eql('DISPONIBLE');",
+                  "    pm.expect(h.creado).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 - Listar habitaciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('El listado incluye la habitacion con su tipo', function () {",
+                  "    const h = pm.response.json().result.find(h => h.id === Number(pm.collectionVariables.get('habitacionA')));",
+                  "    pm.expect(h).to.be.an('object');",
+                  "    pm.expect(h.tipoHabitacionNombre).to.eql(pm.collectionVariables.get('nombreTipoA'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 - Buscar habitacion por id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion/{{habitacionA}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Consulta la habitacion solicitada', function () { pm.expect(pm.response.json().result.numero).to.eql(pm.collectionVariables.get('numeroA')); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 - Reglas y datos invalidos",
+      "item": [
+        {
+          "name": "06 - Rechazar numero duplicado ignorando mayusculas",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroDuplicado}}\",\n  \"piso\": 0,\n  \"precioNoche\": 45.5,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 409', function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07 - Rechazar numero duplicado rodeado de espacios",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"  {{numeroA}}  \",\n  \"piso\": 0,\n  \"precioNoche\": 45.5,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 409', function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 - Rechazar numero vacio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \" \",\n  \"piso\": 0,\n  \"precioNoche\": 45.5,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Indica el campo invalido', function () {",
+                  "    pm.expect(pm.response.json().result).to.have.property('numero');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09 - Rechazar numero mayor a 20 caracteres",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"XXXXXXXXXXXXXXXXXXXXX\",\n  \"piso\": 0,\n  \"precioNoche\": 45.5,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Indica el campo invalido', function () {",
+                  "    pm.expect(pm.response.json().result).to.have.property('numero');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10 - Rechazar piso negativo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroA}}\",\n  \"piso\": -1,\n  \"precioNoche\": 45.5,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Indica el campo invalido', function () {",
+                  "    pm.expect(pm.response.json().result).to.have.property('piso');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "11 - Rechazar piso ausente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroA}}\",\n  \"precioNoche\": 45.5,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Indica el campo invalido', function () {",
+                  "    pm.expect(pm.response.json().result).to.have.property('piso');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "12 - Rechazar precio cero",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroA}}\",\n  \"piso\": 0,\n  \"precioNoche\": 0,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Indica el campo invalido', function () {",
+                  "    pm.expect(pm.response.json().result).to.have.property('precioNoche');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "13 - Rechazar precio negativo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroA}}\",\n  \"piso\": 0,\n  \"precioNoche\": -1,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Indica el campo invalido', function () {",
+                  "    pm.expect(pm.response.json().result).to.have.property('precioNoche');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "14 - Rechazar precio nulo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroA}}\",\n  \"piso\": 0,\n  \"precioNoche\": null,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Indica el campo invalido', function () {",
+                  "    pm.expect(pm.response.json().result).to.have.property('precioNoche');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "15 - Rechazar mas de dos decimales",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroA}}\",\n  \"piso\": 0,\n  \"precioNoche\": 12.345,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Indica el campo invalido', function () {",
+                  "    pm.expect(pm.response.json().result).to.have.property('precioNoche');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "16 - Rechazar precio con mas de ocho enteros",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroA}}\",\n  \"piso\": 0,\n  \"precioNoche\": 100000000,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Indica el campo invalido', function () {",
+                  "    pm.expect(pm.response.json().result).to.have.property('precioNoche');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "17 - Rechazar estado desconocido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroA}}\",\n  \"piso\": 0,\n  \"precioNoche\": 45.5,\n  \"estado\": \"OCUPADA\",\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "18 - Rechazar estado ausente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroA}}\",\n  \"piso\": 0,\n  \"precioNoche\": 45.5,\n  \"estado\": null,\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Indica el campo invalido', function () {",
+                  "    pm.expect(pm.response.json().result).to.have.property('estado');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "19 - Rechazar tipo ausente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroA}}\",\n  \"piso\": 0,\n  \"precioNoche\": 45.5,\n  \"estado\": \"DISPONIBLE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Indica el campo invalido', function () {",
+                  "    pm.expect(pm.response.json().result).to.have.property('tipoHabitacionId');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "20 - Rechazar id de tipo cero",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroA}}\",\n  \"piso\": 0,\n  \"precioNoche\": 45.5,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Indica el campo invalido', function () {",
+                  "    pm.expect(pm.response.json().result).to.have.property('tipoHabitacionId');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "21 - Rechazar piso negativo al actualizar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion/{{habitacionA}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroA}}\",\n  \"piso\": -1,\n  \"precioNoche\": 45.5,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Indica el campo invalido', function () {",
+                  "    pm.expect(pm.response.json().result).to.have.property('piso');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "22 - Crear segunda habitacion para probar duplicados",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroB}}\",\n  \"piso\": 1,\n  \"precioNoche\": 80,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) pm.collectionVariables.set('habitacionB', pm.response.json().result.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "23 - Rechazar actualizacion con numero de otra habitacion",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion/{{habitacionA}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroB}}\",\n  \"piso\": 0,\n  \"precioNoche\": 45.5,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 409', function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "24 - Bloquear eliminacion del tipo A con habitaciones",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/tipo-habitacion/{{tipoA}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('Explica que el tipo tiene habitaciones asociadas', function () { pm.expect(pm.response.json().message).to.include('habitaciones asociadas'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 - Actualizar relaciones y limpiar",
+      "item": [
+        {
+          "name": "25 - Actualizar conservando numero propio y cambiando tipo precio y estado",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion/{{habitacionA}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"  {{numeroA}}  \",\n  \"piso\": 2,\n  \"precioNoche\": 60.25,\n  \"estado\": \"MANTENIMIENTO\",\n  \"tipoHabitacionId\": {{tipoB}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Conserva identidad y creacion al cambiar los datos', function () {",
+                  "    const h = pm.response.json().result;",
+                  "    pm.expect(h.id).to.eql(Number(pm.collectionVariables.get('habitacionA')));",
+                  "    pm.expect(h.numero).to.eql(pm.collectionVariables.get('numeroA'));",
+                  "    pm.expect(h.creado).to.eql(pm.collectionVariables.get('creadoOriginal'));",
+                  "    pm.expect(h.modificado).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "26 - Verificar persistencia del cambio de tipo y tarifa",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion/{{habitacionA}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Recupera los campos actualizados', function () {",
+                  "    const h = pm.response.json().result;",
+                  "    pm.expect(h.piso).to.eql(2);",
+                  "    pm.expect(h.precioNoche).to.eql(60.25);",
+                  "    pm.expect(h.estado).to.eql('MANTENIMIENTO');",
+                  "    pm.expect(h.tipoHabitacionId).to.eql(Number(pm.collectionVariables.get('tipoB')));",
+                  "    pm.expect(h.tipoHabitacionNombre).to.eql(pm.collectionVariables.get('nombreTipoB'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "27 - Eliminar segunda habitacion",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion/{{habitacionB}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "28 - Eliminar tipo A que ya no tiene habitaciones",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/tipo-habitacion/{{tipoA}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "29 - Rechazar creacion con tipo inexistente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroA}}\",\n  \"piso\": 0,\n  \"precioNoche\": 45.5,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 404', function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "30 - Rechazar actualizacion con tipo inexistente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion/{{habitacionA}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroA}}\",\n  \"piso\": 0,\n  \"precioNoche\": 45.5,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": {{tipoA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 404', function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "31 - Bloquear eliminacion del tipo B que conserva la habitacion",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/tipo-habitacion/{{tipoB}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 409', function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "32 - Eliminar habitacion principal",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion/{{habitacionA}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('La eliminacion confirma con resultado nulo', function () { pm.expect(pm.response.json().result).to.be.null; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "33 - Buscar habitacion eliminada devuelve 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion/{{habitacionA}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 404', function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "34 - Actualizar habitacion eliminada devuelve 404",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion/{{habitacionA}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"{{numeroA}}\",\n  \"piso\": 0,\n  \"precioNoche\": 45.5,\n  \"estado\": \"DISPONIBLE\",\n  \"tipoHabitacionId\": {{tipoB}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 404', function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "35 - Eliminar habitacion inexistente devuelve 404",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion/{{habitacionA}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 404', function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "36 - Eliminar tipo B despues de eliminar sus habitaciones",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/tipo-habitacion/{{tipoB}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "37 - Verificar limpieza de las habitaciones de prueba",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/habitacion"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Las habitaciones de esta ejecucion ya no existen', function () {",
+                  "    const ids = [Number(pm.collectionVariables.get('habitacionA')), Number(pm.collectionVariables.get('habitacionB'))];",
+                  "    pm.expect(pm.response.json().result.some(h => ids.includes(h.id))).to.be.false;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

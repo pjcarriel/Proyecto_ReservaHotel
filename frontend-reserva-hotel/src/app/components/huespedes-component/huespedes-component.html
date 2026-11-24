@@ -1,11 +1,245 @@
 <app-page-header titulo="Huéspedes" descripcion="Registro de huéspedes con sus datos de contacto." icono="huespedes">
-  <button type="button" class="btn btn-primario" disabled>
-    <app-icon nombre="mas" /> Nuevo huésped
+  <button type="button" class="btn btn-primario" (click)="abrirNuevo()">
+    <app-icon nombre="huesped-mas" /> Nuevo huésped
   </button>
 </app-page-header>
 
-<!-- TODO (tarea #20, Jonathan): reemplazar por la tabla real con las mismas clases (.tarjeta, .campo, .tabla, .estado) -->
-<app-en-construccion
-  [columnas]="['Cédula', 'Nombres', 'Apellidos', 'Email', 'Teléfono', 'Acciones']"
-  buscar="Buscar por cédula o nombre…"
-  responsable="Jonathan · tarea #20" />
+@if (mensajeExito()) {
+  <div class="aviso-exito" role="status">
+    <span>{{ mensajeExito() }}</span>
+    <button type="button" class="cerrar-aviso" (click)="mensajeExito.set(null)" aria-label="Cerrar aviso">×</button>
+  </div>
+}
+
+<section class="tarjeta">
+  <div class="herramientas">
+    <label class="buscar">
+      <app-icon nombre="buscar" />
+      <input
+        class="campo"
+        type="search"
+        placeholder="Buscar por cédula, nombre o correo…"
+        aria-label="Buscar huésped"
+        [value]="filtro()"
+        (input)="filtro.set($any($event.target).value)" />
+    </label>
+    <span class="etiqueta">
+      {{ huespedesFiltrados().length }} de {{ huespedes().length }} registrados
+    </span>
+  </div>
+
+  @if (cargando()) {
+    <div class="tabla-contenedor" aria-busy="true">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Cédula</th>
+            <th>Nombres</th>
+            <th>Apellidos</th>
+            <th>Email</th>
+            <th>Teléfono</th>
+            <th class="col-acciones">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (fila of filasEsqueleto; track fila) {
+            <tr>
+              <td><span class="esqueleto"></span></td>
+              <td><span class="esqueleto"></span></td>
+              <td><span class="esqueleto"></span></td>
+              <td><span class="esqueleto"></span></td>
+              <td><span class="esqueleto"></span></td>
+              <td><span class="esqueleto"></span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else if (errorCarga()) {
+    <div class="vacio" role="alert">
+      <span class="vacio-icono"><app-icon nombre="alerta" /></span>
+      <strong>No se pudieron cargar los huéspedes</strong>
+      <p>{{ errorCarga() }}</p>
+      <button type="button" class="btn btn-secundario" (click)="cargarHuespedes()">Reintentar</button>
+    </div>
+  } @else if (huespedesFiltrados().length === 0) {
+    <div class="vacio">
+      <span class="vacio-icono"><app-icon nombre="huespedes" /></span>
+      @if (filtro().trim()) {
+        <strong>Sin coincidencias</strong>
+        <p>No hay huéspedes que coincidan con "{{ filtro() }}".</p>
+        <button type="button" class="btn btn-secundario" (click)="filtro.set('')">Limpiar búsqueda</button>
+      } @else {
+        <strong>Aún no hay huéspedes registrados</strong>
+        <p>Registra el primer huésped para poder asociarlo a una reserva.</p>
+        <button type="button" class="btn btn-primario" (click)="abrirNuevo()">
+          <app-icon nombre="huesped-mas" /> Registrar huésped
+        </button>
+      }
+    </div>
+  } @else {
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Cédula</th>
+            <th>Nombres</th>
+            <th>Apellidos</th>
+            <th>Email</th>
+            <th>Teléfono</th>
+            <th class="col-acciones">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (h of huespedesFiltrados(); track h.id) {
+            <tr>
+              <td class="mono">{{ h.cedula }}</td>
+              <td class="negrita">{{ h.nombres }}</td>
+              <td>{{ h.apellidos }}</td>
+              <td>{{ h.email }}</td>
+              <td>{{ h.telefono || '—' }}</td>
+              <td class="acciones-fila">
+                <button type="button" class="btn btn-secundario btn-sm" (click)="abrirEditar(h)">
+                  Editar
+                </button>
+                <button type="button" class="btn btn-peligro-suave btn-sm" (click)="confirmarEliminar(h)">
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+<!-- Modal Crear / Editar Huésped -->
+@if (modalAbierto()) {
+  <div class="modal-fondo" (click)="cerrarModal()">
+    <div class="tarjeta modal-caja" role="dialog" aria-modal="true"
+         [attr.aria-labelledby]="'titulo-modal-huesped'"
+         (click)="$event.stopPropagation()">
+      <header class="tarjeta-cabecera">
+        <div>
+          <h2 id="titulo-modal-huesped">{{ editandoId() === null ? 'Nuevo huésped' : 'Editar huésped' }}</h2>
+          <p>Completa los datos personales y de contacto del huésped.</p>
+        </div>
+        <button type="button" class="btn-cerrar" (click)="cerrarModal()" aria-label="Cerrar">×</button>
+      </header>
+
+      <form class="modal-form" [formGroup]="frmHuesped" (ngSubmit)="guardar()" novalidate>
+        <div class="fila-dos">
+          <div class="grupo">
+            <label for="h-cedula">Cédula / Pasaporte *</label>
+            <input id="h-cedula" class="campo" formControlName="cedula" maxlength="13" placeholder="1710034065" />
+            @if (frmHuesped.controls.cedula.touched && frmHuesped.controls.cedula.invalid) {
+              <small class="ayuda-error">
+                @if (frmHuesped.controls.cedula.errors?.['required']) { La cédula es obligatoria }
+                @else { Máximo 13 caracteres }
+              </small>
+            }
+          </div>
+
+          <div class="grupo">
+            <label for="h-telefono">Teléfono</label>
+            <input id="h-telefono" class="campo" formControlName="telefono" maxlength="20" placeholder="0991234567" />
+            @if (frmHuesped.controls.telefono.touched && frmHuesped.controls.telefono.invalid) {
+              <small class="ayuda-error">Máximo 20 caracteres</small>
+            }
+          </div>
+        </div>
+
+        <div class="fila-dos">
+          <div class="grupo">
+            <label for="h-nombres">Nombres *</label>
+            <input id="h-nombres" class="campo" formControlName="nombres" maxlength="60" placeholder="Ana María" />
+            @if (frmHuesped.controls.nombres.touched && frmHuesped.controls.nombres.invalid) {
+              <small class="ayuda-error">
+                @if (frmHuesped.controls.nombres.errors?.['required']) { Los nombres son obligatorios }
+                @else { Máximo 60 caracteres }
+              </small>
+            }
+          </div>
+
+          <div class="grupo">
+            <label for="h-apellidos">Apellidos *</label>
+            <input id="h-apellidos" class="campo" formControlName="apellidos" maxlength="60" placeholder="Pérez Gómez" />
+            @if (frmHuesped.controls.apellidos.touched && frmHuesped.controls.apellidos.invalid) {
+              <small class="ayuda-error">
+                @if (frmHuesped.controls.apellidos.errors?.['required']) { Los apellidos son obligatorios }
+                @else { Máximo 60 caracteres }
+              </small>
+            }
+          </div>
+        </div>
+
+        <div class="grupo">
+          <label for="h-email">Correo electrónico *</label>
+          <input id="h-email" class="campo" type="email" formControlName="email" maxlength="100" placeholder="huesped@correo.com" />
+          @if (frmHuesped.controls.email.touched && frmHuesped.controls.email.invalid) {
+            <small class="ayuda-error">
+              @if (frmHuesped.controls.email.errors?.['required']) { El correo es obligatorio }
+              @else if (frmHuesped.controls.email.errors?.['email']) { Ingresa un correo electrónico válido }
+              @else { Máximo 100 caracteres }
+            </small>
+          }
+        </div>
+
+        @if (errorFormulario()) {
+          <p class="alerta-error" role="alert">
+            <app-icon nombre="alerta" /> {{ errorFormulario() }}
+          </p>
+        }
+
+        <footer class="modal-pie">
+          <button type="button" class="btn btn-secundario" (click)="cerrarModal()" [disabled]="guardando()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primario" [disabled]="guardando()">
+            {{ guardando() ? 'Guardando…' : (editandoId() === null ? 'Registrar huésped' : 'Guardar cambios') }}
+          </button>
+        </footer>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Modal Confirmar Eliminación -->
+@if (huespedAEliminar(); as objetivo) {
+  <div class="modal-fondo" (click)="cancelarEliminar()">
+    <div class="tarjeta modal-caja modal-confirmar" role="dialog" aria-modal="true"
+         aria-labelledby="titulo-eliminar-huesped"
+         (click)="$event.stopPropagation()">
+      <header class="tarjeta-cabecera">
+        <div>
+          <h2 id="titulo-eliminar-huesped">Eliminar huésped</h2>
+          <p>Esta acción no se puede deshacer.</p>
+        </div>
+        <button type="button" class="btn-cerrar" (click)="cancelarEliminar()" aria-label="Cerrar">×</button>
+      </header>
+
+      <div class="modal-cuerpo">
+        <p>
+          ¿Estás seguro de eliminar a <strong>{{ objetivo.nombres }} {{ objetivo.apellidos }}</strong>
+          (Cédula: <span class="mono">{{ objetivo.cedula }}</span>)?
+        </p>
+
+        @if (errorEliminar()) {
+          <p class="alerta-error" role="alert">
+            <app-icon nombre="alerta" /> {{ errorEliminar() }}
+          </p>
+        }
+      </div>
+
+      <footer class="modal-pie">
+        <button type="button" class="btn btn-secundario" (click)="cancelarEliminar()" [disabled]="eliminando()">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-peligro" (click)="ejecutarEliminar()" [disabled]="eliminando()">
+          {{ eliminando() ? 'Eliminando…' : 'Sí, eliminar' }}
+        </button>
+      </footer>
+    </div>
+  </div>
+}

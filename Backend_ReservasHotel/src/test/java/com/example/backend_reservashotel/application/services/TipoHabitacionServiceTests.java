@@ -1,6 +1,7 @@
 package com.example.backend_reservashotel.application.services;
 
 import com.example.backend_reservashotel.application.ports.out.TipoHabitacionOut;
+import com.example.backend_reservashotel.application.ports.out.HabitacionOut;
 import com.example.backend_reservashotel.domain.exception.RecursoNoEncontradoException;
 import com.example.backend_reservashotel.domain.exception.ReglaNegocioException;
 import com.example.backend_reservashotel.domain.models.TipoHabitacion;
@@ -24,6 +25,9 @@ import static org.mockito.Mockito.when;
 class TipoHabitacionServiceTests {
     @Mock
     private TipoHabitacionOut tipoHabitacionOut;
+
+    @Mock
+    private HabitacionOut habitacionOut;
 
     @InjectMocks
     private TipoHabitacionService service;
@@ -97,6 +101,16 @@ class TipoHabitacionServiceTests {
         service.eliminar(1L);
 
         verify(tipoHabitacionOut).eliminar(1L);
+    }
+
+    @Test
+    void eliminarUnTipoConHabitacionesSeRechazaSinBorrar() {
+        when(tipoHabitacionOut.buscarPorId(1L)).thenReturn(Optional.of(existente()));
+        when(habitacionOut.existePorTipoHabitacion(1L)).thenReturn(true);
+
+        assertThrows(ReglaNegocioException.class, () -> service.eliminar(1L));
+
+        verify(tipoHabitacionOut, never()).eliminar(any());
     }
 
     private TipoHabitacion existente() {

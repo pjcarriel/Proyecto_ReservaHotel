@@ -31,14 +31,14 @@ export const SECCIONES_MENU: SeccionMenu[] = [
     titulo: 'Recepción',
     opciones: [
       { texto: 'Reservas', descripcion: 'Crear y cancelar reservas', icono: 'reservas', ruta: '/reservas', roles: TODOS, listo: false },
-      { texto: 'Huéspedes', descripcion: 'Registro de huéspedes', icono: 'huespedes', ruta: '/huespedes', roles: TODOS, listo: false },
+      { texto: 'Huéspedes', descripcion: 'Registro de huéspedes', icono: 'huespedes', ruta: '/huespedes', roles: TODOS, listo: true },
     ],
   },
   {
     titulo: 'Hotel',
     opciones: [
       { texto: 'Habitaciones', descripcion: 'Habitaciones y su estado', icono: 'habitaciones', ruta: '/habitaciones', roles: TODOS, listo: false },
-      { texto: 'Tipos de habitación', descripcion: 'Categorías y capacidad', icono: 'tipos', ruta: '/tipos-habitacion', roles: TODOS, listo: false },
+      { texto: 'Tipos de habitación', descripcion: 'Categorías y capacidad', icono: 'tipos', ruta: '/tipos-habitacion', roles: TODOS, listo: true },
     ],
   },
   {
