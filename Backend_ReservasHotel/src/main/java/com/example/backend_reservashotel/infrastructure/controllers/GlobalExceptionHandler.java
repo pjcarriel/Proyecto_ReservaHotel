@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -43,6 +44,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
     public ResponseEntity<ActionResponse<Void>> peticionMalFormada(Exception ex) {
         return respuesta(HttpStatus.BAD_REQUEST, "Petición mal formada", null);
+    }
+
+    // 401: login fallido (usuario o password incorrectos, o usuario desactivado).
+    // Un solo mensaje para no revelar qué usuarios existen.
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ActionResponse<Void>> loginFallido(AuthenticationException ex) {
+        return respuesta(HttpStatus.UNAUTHORIZED, "Usuario o contraseña incorrectos", null);
     }
 
     // 404: el registro buscado no existe
