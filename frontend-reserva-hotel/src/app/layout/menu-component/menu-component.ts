@@ -4,6 +4,8 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { IconComponent } from '../icon/icon';
 import { HealthService } from '../../services/health-service';
+import { LoginService } from '../../services/login-service';
+import { Rol } from '../../models/rol';
 import { SECCIONES_MENU } from './menu-opciones';
 
 type EstadoApi = 'verificando' | 'conectada' | 'sin-conexion';
@@ -19,7 +21,14 @@ const CLAVE_COLAPSADO = 'hotel.menu-colapsado';
 })
 export class MenuComponent {
   private healthService = inject(HealthService);
+  private loginService = inject(LoginService);
   private router = inject(Router);
+
+  // Usuario de la sesión (nombre, rol y cerrar sesión)
+  readonly usuario = this.loginService.usuarioSession;
+  readonly inicial = computed(() => this.usuario()?.username.charAt(0) ?? '?');
+  readonly rolTexto = computed(() =>
+    this.usuario()?.rol === Rol.ADMIN ? 'Administrador' : 'Recepcionista');
 
   // TODO (tarea #27): filtrar por el rol del usuario con loginService.isRole(op.roles)
   readonly secciones = SECCIONES_MENU;
@@ -86,6 +95,11 @@ export class MenuComponent {
 
   cerrarMenu(): void {
     this.menuAbierto.set(false);
+  }
+
+  cerrarSesion(): void {
+    this.loginService.logout();
+    this.router.navigate(['/login']);
   }
 
   private static leerColapsado(): boolean {

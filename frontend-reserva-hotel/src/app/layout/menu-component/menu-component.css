@@ -49,6 +49,24 @@ a.item.activo app-icon { color: var(--laton-claro); }
 .item.pendiente { color: var(--marino-tenue); cursor: default; }
 .pronto { font-size: 10.5px; font-weight: 600; padding: 1px 7px; border-radius: 999px; border: 1px solid rgba(126, 142, 164, 0.35); }
 
+.sesion {
+  display: flex; align-items: center; gap: 10px; margin: auto 14px 0; padding: 12px 4px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.avatar {
+  display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px;
+  background: linear-gradient(145deg, var(--laton-claro), var(--laton)); color: var(--marino);
+  font-weight: 700; font-size: 14px; text-transform: uppercase;
+}
+.sesion-texto { display: grid; min-width: 0; flex: 1; line-height: 1.3; }
+.sesion-nombre { color: #fff; font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sesion-rol { color: var(--marino-tenue); font-size: 11.5px; }
+.salir {
+  display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1); background: none; color: var(--marino-texto); cursor: pointer;
+}
+.salir:hover { background: rgba(229, 103, 90, 0.16); border-color: rgba(229, 103, 90, 0.4); color: #ffb4ab; }
+
 .api {
   display: flex; align-items: center; gap: 10px; margin: 12px 14px 18px; padding: 10px 12px;
   border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08); background: rgba(255, 255, 255, 0.04);
@@ -64,6 +82,8 @@ a.item.activo app-icon { color: var(--laton-claro); }
 .colapsado .titulo-seccion { font-size: 0; margin: 14px 12px 10px; height: 1px; background: rgba(255, 255, 255, 0.08); }
 .colapsado .item { justify-content: center; padding: 10px; }
 .colapsado .api { justify-content: center; }
+.colapsado .sesion { flex-direction: column; padding-top: 14px; }
+.colapsado .sesion-texto { display: none; }
 
 /* ---------- Barra superior ---------- */
 .principal { min-width: 0; display: flex; flex-direction: column; }
@@ -109,6 +129,8 @@ a.item.activo app-icon { color: var(--laton-claro); }
   .colapsado .marca-texto, .colapsado .item-texto, .colapsado .pronto, .colapsado .api-texto { display: revert; }
   .colapsado .titulo-seccion { font-size: 11px; margin: 20px 10px 8px; height: auto; background: none; }
   .colapsado .item { justify-content: flex-start; padding: 9px 12px; }
+  .colapsado .sesion { flex-direction: row; padding-top: 12px; }
+  .colapsado .sesion-texto { display: grid; }
   .solo-movil { display: grid; }
   .solo-escritorio { display: none; }
   .barra { padding: 0 16px; }

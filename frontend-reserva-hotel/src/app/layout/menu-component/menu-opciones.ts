@@ -44,7 +44,7 @@ export const SECCIONES_MENU: SeccionMenu[] = [
   {
     titulo: 'Administración',
     opciones: [
-      { texto: 'Usuarios', descripcion: 'Cuentas y roles del sistema', icono: 'usuarios', ruta: '/usuarios', roles: SOLO_ADMIN, listo: false },
+      { texto: 'Usuarios', descripcion: 'Cuentas y roles del sistema', icono: 'usuarios', ruta: '/usuarios', roles: SOLO_ADMIN, listo: true },
     ],
   },
 ];
