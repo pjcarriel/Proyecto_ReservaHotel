@@ -29,12 +29,17 @@
 
 <!-- Indicadores -->
 <section class="indicadores" aria-label="Indicadores">
-  @for (ind of indicadores; track ind.titulo) {
-    <article class="tarjeta indicador" [attr.data-tono]="ind.tono">
+  @for (ind of indicadores(); track ind.titulo) {
+    <article class="tarjeta indicador" [attr.data-tono]="ind.tono" [attr.aria-busy]="cargando()">
       <span class="indicador-icono"><app-icon [nombre]="ind.icono" /></span>
       <div>
         <p class="indicador-titulo">{{ ind.titulo }}</p>
-        <p class="indicador-valor" [class.sin-dato]="ind.valor === null">{{ ind.valor ?? '—' }}</p>
+        @if (cargando()) {
+          <span class="esqueleto valor-cargando" aria-hidden="true"></span>
+        } @else {
+          <p class="indicador-valor" [class.sin-dato]="ind.valor === null"
+             [attr.title]="ind.valor === null ? 'No se pudo cargar este dato' : null">{{ ind.valor ?? '—' }}</p>
+        }
         <p class="indicador-detalle">{{ ind.detalle }}</p>
       </div>
     </article>
@@ -54,12 +59,40 @@
         <button type="button" [attr.aria-pressed]="movimiento() === 'salidas'" (click)="movimiento.set('salidas')">Salidas</button>
       </div>
     </header>
-    <!-- TODO (tarea #24): listar las reservas cuya entrada/salida es hoy -->
-    <div class="vacio">
-      <span class="vacio-icono"><app-icon [nombre]="movimiento() === 'llegadas' ? 'llegada' : 'salida'" /></span>
-      <strong>{{ movimiento() === 'llegadas' ? 'Llegadas del día' : 'Salidas del día' }}</strong>
-      <p>Aparecerán aquí cuando el módulo de reservas esté conectado.</p>
-    </div>
+    @if (cargando()) {
+      <div class="movimientos-carga" aria-hidden="true">
+        <span class="esqueleto"></span><span class="esqueleto"></span><span class="esqueleto"></span>
+      </div>
+    } @else if (listaMovimiento(); as lista) {
+      @if (lista.length) {
+        <ul class="movimientos">
+          @for (m of lista; track m.numero) {
+            <li>
+              <span class="mov-icono" [class.salida]="movimiento() === 'salidas'">
+                <app-icon [nombre]="movimiento() === 'llegadas' ? 'llegada' : 'salida'" />
+              </span>
+              <span class="mov-texto">
+                <strong>{{ m.huesped }}</strong>
+                <small>{{ m.numero }} · Hab. {{ m.habitaciones }}</small>
+              </span>
+              <span class="mov-total">{{ m.total | currency: 'USD' : 'symbol' : '1.2-2' }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="vacio">
+          <span class="vacio-icono"><app-icon [nombre]="movimiento() === 'llegadas' ? 'llegada' : 'salida'" /></span>
+          <strong>{{ movimiento() === 'llegadas' ? 'Sin llegadas hoy' : 'Sin salidas hoy' }}</strong>
+          <p>No hay reservas confirmadas que {{ movimiento() === 'llegadas' ? 'entren' : 'salgan' }} hoy.</p>
+        </div>
+      }
+    } @else {
+      <div class="vacio">
+        <span class="vacio-icono"><app-icon nombre="alerta" /></span>
+        <strong>No se pudieron cargar las reservas</strong>
+        <p>Revisa que el backend esté levantado y vuelve a abrir el inicio.</p>
+      </div>
+    }
   </article>
 
   <article class="tarjeta">
@@ -84,7 +117,7 @@
         </div>
       </div>
       <ul class="leyenda">
-        @for (l of leyenda; track l.texto) {
+        @for (l of leyenda(); track l.texto) {
           <li>
             <span class="leyenda-punto" [class]="l.clase"></span>
             <span class="leyenda-texto">{{ l.texto }}</span>
