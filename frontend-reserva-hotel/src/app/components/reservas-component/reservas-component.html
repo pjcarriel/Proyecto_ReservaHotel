@@ -1,5 +1,5 @@
-<app-page-header titulo="Reservas" descripcion="Listado de reservas confirmadas y canceladas." icono="reservas">
-  <button type="button" class="btn btn-primario" disabled title="Creación de reservas disponible en tarea #25">
+<app-page-header titulo="Reservas" descripcion="Creación, listado y cancelación de reservas." icono="reservas">
+  <button type="button" class="btn btn-primario" (click)="abrirModalCrear()">
     <app-icon nombre="mas" /> Nueva reserva
   </button>
 </app-page-header>
@@ -88,7 +88,10 @@
         </button>
       } @else {
         <strong>Aún no hay reservas registradas</strong>
-        <p>Las reservas registradas aparecerán aquí con su estado y monto total.</p>
+        <p>Crea la primera reserva seleccionando un huésped, fechas y habitaciones disponibles.</p>
+        <button type="button" class="btn btn-primario" (click)="abrirModalCrear()">
+          <app-icon nombre="mas" /> Nueva reserva
+        </button>
       }
     </div>
   } @else {
@@ -141,6 +144,156 @@
     </div>
   }
 </section>
+
+<!-- Modal Nueva Reserva -->
+@if (modalCrearAbierto()) {
+  <div class="modal-fondo" (click)="cerrarModalCrear()">
+    <div class="tarjeta modal-caja modal-crear" role="dialog" aria-modal="true"
+         aria-labelledby="titulo-modal-crear-reserva"
+         (click)="$event.stopPropagation()">
+      <header class="tarjeta-cabecera">
+        <div>
+          <h2 id="titulo-modal-crear-reserva">Nueva reserva</h2>
+          <p>Selecciona el huésped, el rango de fechas y las habitaciones disponibles.</p>
+        </div>
+        <button type="button" class="btn-cerrar" (click)="cerrarModalCrear()" aria-label="Cerrar">×</button>
+      </header>
+
+      @if (cargandoCatalogos()) {
+        <div class="modal-cuerpo">
+          <p class="texto-tenue">Cargando huéspedes y habitaciones disponibles…</p>
+          <span class="esqueleto"></span>
+          <span class="esqueleto"></span>
+        </div>
+      } @else if (errorCatalogos()) {
+        <div class="modal-cuerpo">
+          <p class="alerta-error" role="alert">
+            <app-icon nombre="alerta" /> {{ errorCatalogos() }}
+          </p>
+          <div>
+            <button type="button" class="btn btn-secundario" (click)="cargarCatalogos()">Reintentar</button>
+          </div>
+        </div>
+      } @else {
+        <form [formGroup]="formReserva" (ngSubmit)="guardarReserva()" novalidate>
+          <div class="modal-cuerpo">
+            <!-- Huésped -->
+            <div class="grupo-campo">
+              <label for="res-huesped">Huésped *</label>
+              <select id="res-huesped" class="campo" formControlName="huespedId">
+                <option [ngValue]="0" disabled>Selecciona un huésped…</option>
+                @for (h of huespedes(); track h.id) {
+                  <option [ngValue]="h.id">{{ h.nombres }} {{ h.apellidos }} — CI {{ h.cedula }}</option>
+                }
+              </select>
+              @if (formReserva.controls.huespedId.touched && formReserva.controls.huespedId.invalid) {
+                <small class="error-campo">Debes seleccionar un huésped.</small>
+              }
+            </div>
+
+            <!-- Fechas -->
+            <div class="fila-doble">
+              <div class="grupo-campo">
+                <label for="res-entrada">Fecha de entrada *</label>
+                <input
+                  id="res-entrada"
+                  class="campo"
+                  type="date"
+                  [min]="fechaMinimaHoy"
+                  formControlName="fechaEntrada"
+                  (input)="alCambiarFechaEntrada($any($event.target).value)" />
+              </div>
+
+              <div class="grupo-campo">
+                <label for="res-salida">Fecha de salida *</label>
+                <input
+                  id="res-salida"
+                  class="campo"
+                  type="date"
+                  [min]="fechaEntradaValor() || fechaMinimaHoy"
+                  formControlName="fechaSalida"
+                  (input)="alCambiarFechaSalida($any($event.target).value)" />
+              </div>
+            </div>
+
+            @if (fechasInvalidas()) {
+              <small class="error-campo">La fecha de salida debe ser posterior a la fecha de entrada.</small>
+            }
+
+            <!-- Selección de Habitaciones -->
+            <div class="grupo-campo">
+              <div class="etiqueta-con-badge">
+                <label>Habitaciones disponibles *</label>
+                <span class="etiqueta">{{ habitacionesSeleccionadas().length }} seleccionadas</span>
+              </div>
+
+              @if (habitacionesDisponibles().length === 0) {
+                <p class="alerta-aviso">No hay habitaciones en estado DISPONIBLE actualmente.</p>
+              } @else {
+                <div class="lista-habitaciones">
+                  @for (hab of habitacionesDisponibles(); track hab.id) {
+                    <label class="item-habitacion" [class.seleccionada]="estaSeleccionada(hab.id)">
+                      <input
+                        type="checkbox"
+                        [checked]="estaSeleccionada(hab.id)"
+                        (change)="alternarHabitacion(hab.id)" />
+                      <div class="hab-info">
+                        <strong>Habitación #{{ hab.numero }}</strong>
+                        <span>Piso {{ hab.piso }} · {{ hab.tipoHabitacionNombre }}</span>
+                      </div>
+                      <span class="mono">{{ hab.precioNoche | currency:'USD':'symbol':'1.2-2' }} / noche</span>
+                    </label>
+                  }
+                </div>
+              }
+
+              @if (formReserva.touched && habitacionesSeleccionadas().length === 0) {
+                <small class="error-campo">Selecciona al menos una habitación.</small>
+              }
+            </div>
+
+            <!-- Resumen en vivo -->
+            <div class="totales-caja">
+              <div class="resumen-cabecera">
+                <span>Resumen de estadía</span>
+                <strong>{{ nochesCalculadas() }} {{ nochesCalculadas() === 1 ? 'noche' : 'noches' }}</strong>
+              </div>
+
+              @for (item of detallesResumen(); track item.habitacion.id) {
+                <div class="resumen-linea">
+                  <span>Hab. #{{ item.habitacion.numero }} ({{ item.noches }} × {{ item.habitacion.precioNoche | currency:'USD':'symbol':'1.2-2' }})</span>
+                  <span class="mono">{{ item.subtotal | currency:'USD':'symbol':'1.2-2' }}</span>
+                </div>
+              }
+
+              <div><span>Subtotal</span><span class="mono">{{ subtotalCalculado() | currency:'USD':'symbol':'1.2-2' }}</span></div>
+              <div><span>IVA (15%)</span><span class="mono">{{ ivaCalculado() | currency:'USD':'symbol':'1.2-2' }}</span></div>
+              <div class="total-final"><span>Total a pagar</span><span class="mono">{{ totalCalculado() | currency:'USD':'symbol':'1.2-2' }}</span></div>
+            </div>
+
+            @if (errorGuardar()) {
+              <p class="alerta-error" role="alert">
+                <app-icon nombre="alerta" /> {{ errorGuardar() }}
+              </p>
+            }
+          </div>
+
+          <footer class="modal-pie">
+            <button type="button" class="btn btn-secundario" (click)="cerrarModalCrear()" [disabled]="guardando()">
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primario"
+              [disabled]="guardando() || formReserva.invalid || fechasInvalidas() || habitacionesSeleccionadas().length === 0">
+              {{ guardando() ? 'Confirmando…' : 'Confirmar reserva' }}
+            </button>
+          </footer>
+        </form>
+      }
+    </div>
+  </div>
+}
 
 <!-- Modal Detalle de Reserva -->
 @if (reservaDetalle(); as r) {

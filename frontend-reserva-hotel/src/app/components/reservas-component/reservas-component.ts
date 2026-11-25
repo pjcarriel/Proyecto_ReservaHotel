@@ -1,21 +1,33 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { PageHeaderComponent } from '../../layout/page-header/page-header';
 import { IconComponent } from '../../layout/icon/icon';
 import { ReservaService } from '../../services/reserva-service';
+import { HuespedService } from '../../services/huesped-service';
+import { HabitacionService } from '../../services/habitacion-service';
 import { EstadoReserva, Reserva } from '../../models/reserva';
+import { Huesped } from '../../models/huesped';
+import { Habitacion } from '../../models/habitacion';
 
 type FiltroEstado = 'TODAS' | EstadoReserva;
 
 @Component({
-  imports: [CurrencyPipe, PageHeaderComponent, IconComponent],
+  imports: [CurrencyPipe, ReactiveFormsModule, PageHeaderComponent, IconComponent],
   selector: 'app-reservas-component',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './reservas-component.css',
   templateUrl: './reservas-component.html',
 })
 export class ReservasComponent implements OnInit {
+  private fb = inject(FormBuilder);
   private reservaService = inject(ReservaService);
+  private huespedService = inject(HuespedService);
+  private habitacionService = inject(HabitacionService);
+
+  readonly IVA_PORCENTAJE = 0.15;
+  readonly fechaMinimaHoy = ReservasComponent.hoyISO();
 
   reservas = signal<Reserva[]>([]);
   cargando = signal<boolean>(true);
@@ -32,6 +44,26 @@ export class ReservasComponent implements OnInit {
   cancelando = signal<boolean>(false);
   errorCancelar = signal<string | null>(null);
 
+  // Modal de nueva reserva
+  modalCrearAbierto = signal<boolean>(false);
+  cargandoCatalogos = signal<boolean>(false);
+  errorCatalogos = signal<string | null>(null);
+  huespedes = signal<Huesped[]>([]);
+  habitaciones = signal<Habitacion[]>([]);
+  habitacionesSeleccionadas = signal<number[]>([]);
+  guardando = signal<boolean>(false);
+  errorGuardar = signal<string | null>(null);
+
+  // Señales espejo para el cálculo reactivo del resumen
+  fechaEntradaValor = signal<string>('');
+  fechaSalidaValor = signal<string>('');
+
+  formReserva = this.fb.nonNullable.group({
+    huespedId: [0, [Validators.required, Validators.min(1)]],
+    fechaEntrada: ['', [Validators.required]],
+    fechaSalida: ['', [Validators.required]],
+  });
+
   readonly filasEsqueleto = [1, 2, 3, 4, 5];
 
   reservasFiltradas = computed(() => {
@@ -47,6 +79,51 @@ export class ReservasComponent implements OnInit {
       );
     });
   });
+
+  habitacionesDisponibles = computed(() =>
+    this.habitaciones().filter(h => h.estado === 'DISPONIBLE')
+  );
+
+  nochesCalculadas = computed(() => {
+    const entrada = this.fechaEntradaValor();
+    const salida = this.fechaSalidaValor();
+    if (!entrada || !salida) return 0;
+    const ini = new Date(`${entrada}T00:00:00`).getTime();
+    const fin = new Date(`${salida}T00:00:00`).getTime();
+    const dias = Math.round((fin - ini) / 86_400_000);
+    return dias > 0 ? dias : 0;
+  });
+
+  fechasInvalidas = computed(() => {
+    const entrada = this.fechaEntradaValor();
+    const salida = this.fechaSalidaValor();
+    if (!entrada || !salida) return false;
+    return this.nochesCalculadas() <= 0;
+  });
+
+  detallesResumen = computed(() => {
+    const noches = this.nochesCalculadas();
+    const ids = new Set(this.habitacionesSeleccionadas());
+    return this.habitaciones()
+      .filter(h => ids.has(h.id))
+      .map(h => ({
+        habitacion: h,
+        noches,
+        subtotal: this.redondear(h.precioNoche * noches),
+      }));
+  });
+
+  subtotalCalculado = computed(() =>
+    this.redondear(this.detallesResumen().reduce((acc, item) => acc + item.subtotal, 0))
+  );
+
+  ivaCalculado = computed(() =>
+    this.redondear(this.subtotalCalculado() * this.IVA_PORCENTAJE)
+  );
+
+  totalCalculado = computed(() =>
+    this.redondear(this.subtotalCalculado() + this.ivaCalculado())
+  );
 
   ngOnInit(): void {
     this.cargarReservas();
@@ -66,6 +143,108 @@ export class ReservasComponent implements OnInit {
         this.cargando.set(false);
       },
     });
+  }
+
+  abrirModalCrear(): void {
+    const hoy = ReservasComponent.hoyISO();
+    const manana = ReservasComponent.sumarDiasISO(hoy, 1);
+
+    this.formReserva.reset({
+      huespedId: 0,
+      fechaEntrada: hoy,
+      fechaSalida: manana,
+    });
+    this.fechaEntradaValor.set(hoy);
+    this.fechaSalidaValor.set(manana);
+    this.habitacionesSeleccionadas.set([]);
+    this.errorGuardar.set(null);
+    this.errorCatalogos.set(null);
+    this.modalCrearAbierto.set(true);
+    this.cargarCatalogos();
+  }
+
+  cerrarModalCrear(): void {
+    if (this.guardando()) return;
+    this.modalCrearAbierto.set(false);
+    this.errorGuardar.set(null);
+  }
+
+  cargarCatalogos(): void {
+    this.cargandoCatalogos.set(true);
+    this.errorCatalogos.set(null);
+
+    forkJoin({
+      huespedes: this.huespedService.listar(),
+      habitaciones: this.habitacionService.listar(),
+    }).subscribe({
+      next: ({ huespedes, habitaciones }) => {
+        this.huespedes.set(huespedes);
+        this.habitaciones.set(habitaciones);
+        this.cargandoCatalogos.set(false);
+      },
+      error: (err: Error) => {
+        this.errorCatalogos.set(err.message);
+        this.cargandoCatalogos.set(false);
+      },
+    });
+  }
+
+  alCambiarFechaEntrada(valor: string): void {
+    this.formReserva.controls.fechaEntrada.setValue(valor);
+    this.fechaEntradaValor.set(valor);
+  }
+
+  alCambiarFechaSalida(valor: string): void {
+    this.formReserva.controls.fechaSalida.setValue(valor);
+    this.fechaSalidaValor.set(valor);
+  }
+
+  estaSeleccionada(habitacionId: number): boolean {
+    return this.habitacionesSeleccionadas().includes(habitacionId);
+  }
+
+  alternarHabitacion(habitacionId: number): void {
+    this.habitacionesSeleccionadas.update(actuales =>
+      actuales.includes(habitacionId)
+        ? actuales.filter(id => id !== habitacionId)
+        : [...actuales, habitacionId]
+    );
+  }
+
+  guardarReserva(): void {
+    this.formReserva.markAllAsTouched();
+    if (
+      this.formReserva.invalid ||
+      this.fechasInvalidas() ||
+      this.habitacionesSeleccionadas().length === 0
+    ) {
+      return;
+    }
+
+    this.guardando.set(true);
+    this.errorGuardar.set(null);
+
+    const { huespedId, fechaEntrada, fechaSalida } = this.formReserva.getRawValue();
+
+    this.reservaService
+      .crear({
+        huespedId: Number(huespedId),
+        fechaEntrada,
+        fechaSalida,
+        habitacionIds: this.habitacionesSeleccionadas(),
+      })
+      .subscribe({
+        next: res => {
+          this.reservas.update(lista => [res.result, ...lista]);
+          this.guardando.set(false);
+          this.modalCrearAbierto.set(false);
+          this.mostrarExito(res.message);
+        },
+        error: (err: Error) => {
+          this.errorGuardar.set(err.message);
+          this.guardando.set(false);
+        },
+      });
   }
 
   verDetalle(reserva: Reserva): void {
@@ -119,12 +298,33 @@ export class ReservasComponent implements OnInit {
     return Math.max(1, Math.round((fin - inicio) / 86_400_000));
   }
 
+  private redondear(valor: number): number {
+    return Math.round((valor + Number.EPSILON) * 100) / 100;
+  }
+
   private mostrarExito(mensaje: string): void {
     this.mensajeExito.set(mensaje);
     setTimeout(() => {
       if (this.mensajeExito() === mensaje) {
         this.mensajeExito.set(null);
       }
-    }, 4000);
+    }, 4500);
+  }
+
+  private static hoyISO(): string {
+    const d = new Date();
+    const anio = d.getFullYear();
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const dia = String(d.getDate()).padStart(2, '0');
+    return `${anio}-${mes}-${dia}`;
+  }
+
+  private static sumarDiasISO(fechaISO: string, dias: number): string {
+    const d = new Date(`${fechaISO}T00:00:00`);
+    d.setDate(d.getDate() + dias);
+    const anio = d.getFullYear();
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const dia = String(d.getDate()).padStart(2, '0');
+    return `${anio}-${mes}-${dia}`;
   }
 }
