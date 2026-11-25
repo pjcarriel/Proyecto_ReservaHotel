@@ -89,3 +89,20 @@ a.acceso:hover { border-color: var(--laton-claro); box-shadow: var(--sombra); tr
 @media (max-width: 480px) {
   .indicadores { grid-template-columns: 1fr; }
 }
+
+/* ---------- Datos reales (tarea #24) ---------- */
+.valor-cargando { width: 56px; height: 22px; margin: 6px 0 4px; border-radius: 8px; }
+
+.movimientos { list-style: none; margin: 0; padding: 6px 0; }
+.movimientos li { display: flex; align-items: center; gap: 12px; padding: 12px 20px; }
+.movimientos li + li { border-top: 1px solid var(--borde); }
+.mov-icono {
+  display: grid; place-items: center; width: 36px; height: 36px; flex-shrink: 0; border-radius: 10px;
+  background: var(--exito-suave); color: var(--exito);
+}
+.mov-icono.salida { background: var(--laton-suave); color: var(--laton); }
+.mov-texto { display: grid; min-width: 0; flex: 1; }
+.mov-texto strong { font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mov-texto small { font-size: 12px; color: var(--texto-tenue); }
+.mov-total { font-weight: 600; font-size: 13.5px; white-space: nowrap; }
+.movimientos-carga { display: grid; gap: 16px; padding: 24px 20px; }
