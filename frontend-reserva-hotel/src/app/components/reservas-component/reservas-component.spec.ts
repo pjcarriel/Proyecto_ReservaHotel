@@ -4,6 +4,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ReservasComponent } from './reservas-component';
 import { environment } from '../../../environments/environment';
 import { Reserva } from '../../models/reserva';
+import { Huesped } from '../../models/huesped';
+import { Habitacion } from '../../models/habitacion';
 
 describe('ReservasComponent', () => {
   let http: HttpTestingController;
@@ -52,6 +54,44 @@ describe('ReservasComponent', () => {
     },
   ];
 
+  const mockHuespedes: Huesped[] = [
+    {
+      id: 1,
+      cedula: '1710034065',
+      nombres: 'Ana María',
+      apellidos: 'Pérez Gómez',
+      email: 'ana@mail.com',
+      telefono: '0991234567',
+      creado: '2026-11-23T10:00:00',
+      modificado: '2026-11-23T10:00:00',
+    },
+  ];
+
+  const mockHabitaciones: Habitacion[] = [
+    {
+      id: 10,
+      numero: '201',
+      piso: 2,
+      precioNoche: 80,
+      estado: 'DISPONIBLE',
+      tipoHabitacionId: 1,
+      tipoHabitacionNombre: 'Doble',
+      creado: '2026-11-23T10:00:00',
+      modificado: '2026-11-23T10:00:00',
+    },
+    {
+      id: 11,
+      numero: '202',
+      piso: 2,
+      precioNoche: 90,
+      estado: 'MANTENIMIENTO',
+      tipoHabitacionId: 2,
+      tipoHabitacionNombre: 'Suite',
+      creado: '2026-11-23T10:00:00',
+      modificado: '2026-11-23T10:00:00',
+    },
+  ];
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ReservasComponent],
@@ -77,6 +117,56 @@ describe('ReservasComponent', () => {
     expect(filas[0].textContent).toContain('Ana María Pérez Gómez');
     expect(filas[0].textContent).toContain('CONFIRMADA');
     expect(filas[1].textContent).toContain('CANCELADA');
+  });
+
+  it('calcula noches, subtotal, IVA (15%) y total al crear una reserva y envía POST', () => {
+    const fixture = TestBed.createComponent(ReservasComponent);
+    fixture.detectChanges();
+
+    http.expectOne(`${environment.apiURL}/reserva`)
+      .flush({ message: 'ok', result: [] });
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.abrirModalCrear();
+
+    http.expectOne(`${environment.apiURL}/huesped`)
+      .flush({ message: 'ok', result: mockHuespedes });
+    http.expectOne(`${environment.apiURL}/habitacion`)
+      .flush({ message: 'ok', result: mockHabitaciones });
+    fixture.detectChanges();
+
+    expect(comp.habitacionesDisponibles().length).toBe(1);
+
+    comp.formReserva.controls.huespedId.setValue(1);
+    comp.alCambiarFechaEntrada('2026-12-01');
+    comp.alCambiarFechaSalida('2026-12-04');
+    comp.alternarHabitacion(10);
+
+    expect(comp.nochesCalculadas()).toBe(3);
+    expect(comp.subtotalCalculado()).toBe(240);
+    expect(comp.ivaCalculado()).toBe(36);
+    expect(comp.totalCalculado()).toBe(276);
+
+    comp.guardarReserva();
+
+    const req = http.expectOne(`${environment.apiURL}/reserva`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      huespedId: 1,
+      fechaEntrada: '2026-12-01',
+      fechaSalida: '2026-12-04',
+      habitacionIds: [10],
+    });
+
+    req.flush({
+      message: 'Reserva creada correctamente',
+      result: { ...listaInicial[0], id: 99, total: 276 },
+    });
+    fixture.detectChanges();
+
+    expect(comp.modalCrearAbierto()).toBe(false);
+    expect(comp.reservas().length).toBe(1);
   });
 
   it('cancela una reserva confirmada mediante PATCH', () => {
