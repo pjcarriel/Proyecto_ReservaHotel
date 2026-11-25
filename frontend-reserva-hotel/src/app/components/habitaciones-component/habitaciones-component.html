@@ -1,11 +1,435 @@
-<app-page-header titulo="Habitaciones" descripcion="Habitaciones del hotel, su tipo y estado." icono="habitaciones">
-  <button type="button" class="btn btn-primario" disabled>
+<app-page-header
+  titulo="Habitaciones"
+  descripcion="Administra el tipo, la tarifa por noche y el estado de cada habitación."
+  icono="habitaciones"
+>
+  <button type="button" class="btn btn-primario" (click)="nuevo()" [disabled]="ocupado()">
     <app-icon nombre="mas" /> Nueva habitación
   </button>
 </app-page-header>
 
-<!-- TODO (tarea #22, Stalin): reemplazar por la tabla real con las mismas clases (.tarjeta, .campo, .tabla, .estado) -->
-<app-en-construccion
-  [columnas]="['Número', 'Tipo', 'Estado', 'Acciones']"
-  buscar="Buscar por número…"
-  responsable="Stalin · tarea #22" />
+@if (mensajeExito()) {
+  <div class="mensaje mensaje-exito" role="status">
+    <span>{{ mensajeExito() }}</span>
+    <button
+      type="button"
+      class="cerrar-mensaje"
+      aria-label="Cerrar mensaje"
+      (click)="mensajeExito.set(null)"
+    >
+      ×
+    </button>
+  </div>
+}
+@if (errorListado()) {
+  <div class="mensaje mensaje-error" role="alert">
+    <app-icon nombre="alerta" /><span>{{ errorListado() }}</span>
+    <button
+      type="button"
+      class="btn btn-secundario"
+      (click)="cargarHabitaciones()"
+      [disabled]="ocupado()"
+    >
+      Reintentar
+    </button>
+  </div>
+}
+
+<section
+  class="tarjeta"
+  aria-labelledby="titulo-listado-habitaciones"
+  [attr.aria-busy]="cargando()"
+>
+  <div class="tarjeta-cabecera">
+    <div>
+      <h2 id="titulo-listado-habitaciones">Habitaciones registradas</h2>
+      <p>{{ habitacionesFiltradas().length }} de {{ habitaciones().length }} habitaciones</p>
+    </div>
+    <button
+      type="button"
+      class="btn btn-secundario"
+      (click)="cargarHabitaciones()"
+      [disabled]="ocupado()"
+    >
+      {{ cargando() ? 'Actualizando…' : 'Actualizar' }}
+    </button>
+  </div>
+  <div class="herramientas">
+    <label class="buscador">
+      <span class="solo-lectores">Buscar habitaciones</span>
+      <app-icon nombre="buscar" />
+      <input
+        #buscar
+        type="search"
+        class="campo"
+        placeholder="Buscar por número o tipo…"
+        [value]="busqueda()"
+        (input)="busqueda.set(buscar.value)"
+      />
+    </label>
+    <div class="segmentos" role="group" aria-label="Filtrar habitaciones por estado">
+      <button
+        type="button"
+        [attr.aria-pressed]="filtroEstado() === 'TODAS'"
+        (click)="filtroEstado.set('TODAS')"
+      >
+        Todas
+      </button>
+      <button
+        type="button"
+        [attr.aria-pressed]="filtroEstado() === 'DISPONIBLE'"
+        (click)="filtroEstado.set('DISPONIBLE')"
+      >
+        Disponibles
+      </button>
+      <button
+        type="button"
+        [attr.aria-pressed]="filtroEstado() === 'MANTENIMIENTO'"
+        (click)="filtroEstado.set('MANTENIMIENTO')"
+      >
+        Mantenimiento
+      </button>
+    </div>
+  </div>
+  @if (cargando()) {
+    <p class="cargando-texto" role="status">Cargando habitaciones…</p>
+    <div class="filas-carga" aria-hidden="true">
+      @for (fila of [1, 2, 3]; track fila) {
+        <div class="fila-carga">
+          <span class="esqueleto"></span><span class="esqueleto"></span
+          ><span class="esqueleto"></span>
+        </div>
+      }
+    </div>
+  } @else if (errorListado() && habitaciones().length === 0) {
+    <div class="vacio">
+      <span class="vacio-icono"><app-icon nombre="alerta" /></span>
+      <strong>El listado no está disponible</strong>
+      <p>Usa «Reintentar» para volver a cargar las habitaciones.</p>
+    </div>
+  } @else if (habitaciones().length === 0) {
+    <div class="vacio">
+      <span class="vacio-icono"><app-icon nombre="habitaciones" /></span>
+      <strong>Aún no hay habitaciones</strong>
+      <p>Registra la primera habitación con su tipo, piso y precio por noche.</p>
+      <button type="button" class="btn btn-primario" (click)="nuevo()">
+        <app-icon nombre="mas" /> Crear primera habitación
+      </button>
+    </div>
+  } @else if (habitacionesFiltradas().length === 0) {
+    <div class="vacio">
+      <span class="vacio-icono"><app-icon nombre="buscar" /></span>
+      <strong>No se encontraron coincidencias</strong>
+      <p>Prueba otro número, tipo o estado de habitación.</p>
+      <button type="button" class="btn btn-secundario" (click)="limpiarFiltros()">
+        Limpiar filtros
+      </button>
+    </div>
+  } @else {
+    <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Listado de habitaciones">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th scope="col">Número</th>
+            <th scope="col">Tipo</th>
+            <th scope="col">Piso</th>
+            <th scope="col">Precio / noche</th>
+            <th scope="col">Estado</th>
+            <th scope="col" class="columna-acciones">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (habitacion of habitacionesFiltradas(); track habitacion.id) {
+            <tr>
+              <td class="numero-habitacion">{{ habitacion.numero }}</td>
+              <td>{{ habitacion.tipoHabitacionNombre }}</td>
+              <td>{{ habitacion.piso === 0 ? 'Planta baja' : habitacion.piso }}</td>
+              <td class="precio">
+                {{ habitacion.precioNoche | currency: 'USD' : 'symbol' : '1.2-2' }}
+              </td>
+              <td>
+                <span
+                  class="estado"
+                  [class.estado-exito]="habitacion.estado === 'DISPONIBLE'"
+                  [class.estado-aviso]="habitacion.estado === 'MANTENIMIENTO'"
+                  >{{ habitacion.estado === 'DISPONIBLE' ? 'Disponible' : 'Mantenimiento' }}</span
+                >
+              </td>
+              <td>
+                <div class="acciones-fila">
+                  <button
+                    type="button"
+                    class="btn btn-secundario accion"
+                    [attr.aria-label]="'Editar habitación ' + habitacion.numero"
+                    [disabled]="ocupado()"
+                    (click)="editar(habitacion)"
+                  >
+                    {{ cargandoEdicion() === habitacion.id ? 'Abriendo…' : 'Editar' }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn accion accion-peligro"
+                    [attr.aria-label]="'Eliminar habitación ' + habitacion.numero"
+                    [disabled]="ocupado()"
+                    (click)="solicitarEliminar(habitacion)"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  <p class="nota-estado">
+    «Disponible» indica el estado operativo. La disponibilidad para una reserva se comprueba según
+    sus fechas.
+  </p>
+</section>
+
+<dialog
+  #editor
+  class="modal"
+  aria-labelledby="titulo-formulario-habitacion"
+  (cancel)="$event.preventDefault(); cerrarFormulario()"
+>
+  <div class="modal-cabecera">
+    <div>
+      <p class="sobretitulo">Habitación del hotel</p>
+      <h2 id="titulo-formulario-habitacion">
+        {{ idEditando() === null ? 'Nueva habitación' : 'Editar habitación' }}
+      </h2>
+    </div>
+    <button
+      type="button"
+      class="cerrar-modal"
+      aria-label="Cerrar formulario"
+      [disabled]="guardando()"
+      (click)="cerrarFormulario()"
+    >
+      ×
+    </button>
+  </div>
+  <form [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+    <div class="modal-cuerpo">
+      @if (errorFormulario()) {
+        <div class="mensaje mensaje-error" role="alert">
+          <app-icon nombre="alerta" /><span>{{ errorFormulario() }}</span>
+        </div>
+      }
+      @if (cargandoTipos()) {
+        <p class="ayuda-tipos" role="status">Cargando tipos de habitación…</p>
+      } @else if (errorTipos()) {
+        <div class="mensaje mensaje-error" role="alert">
+          <span>{{ errorTipos() }}</span>
+          <button
+            type="button"
+            class="btn btn-secundario"
+            (click)="cargarTipos()"
+            [disabled]="guardando()"
+          >
+            Reintentar tipos
+          </button>
+        </div>
+      } @else if (tipos().length === 0) {
+        <div class="mensaje mensaje-aviso" role="status">
+          <span>Necesitas un tipo de habitación para poder guardar.</span>
+          <a class="btn btn-secundario" routerLink="/tipos-habitacion">Crear un tipo</a>
+        </div>
+      }
+      <fieldset class="campos-formulario" [disabled]="guardando()">
+        <div class="grupo-campo">
+          <label for="habitacion-numero">Número <span aria-hidden="true">*</span></label>
+          <input
+            id="habitacion-numero"
+            class="campo"
+            formControlName="numero"
+            required
+            maxlength="20"
+            autofocus
+            placeholder="Ej. 101 o A-01"
+            [class.campo-invalido]="invalido('numero')"
+            [attr.aria-invalid]="invalido('numero') ? 'true' : null"
+            aria-describedby="error-habitacion-numero"
+          />
+          @if (invalido('numero')) {
+            <p id="error-habitacion-numero" class="error-campo">
+              Ingresa un número o código de hasta 20 caracteres.
+            </p>
+          }
+        </div>
+        <div class="grupo-campo">
+          <label for="habitacion-piso">Piso <span aria-hidden="true">*</span></label>
+          <input
+            id="habitacion-piso"
+            class="campo"
+            type="number"
+            formControlName="piso"
+            required
+            min="0"
+            max="2147483647"
+            step="1"
+            [class.campo-invalido]="invalido('piso')"
+            [attr.aria-invalid]="invalido('piso') ? 'true' : null"
+            aria-describedby="ayuda-habitacion-piso error-habitacion-piso"
+          />
+          <p id="ayuda-habitacion-piso" class="ayuda-campo">0 corresponde a planta baja.</p>
+          @if (invalido('piso')) {
+            <p id="error-habitacion-piso" class="error-campo">
+              Ingresa un piso entero mayor o igual que cero.
+            </p>
+          }
+        </div>
+        <div class="grupo-campo campo-completo">
+          <label for="habitacion-tipo">Tipo de habitación <span aria-hidden="true">*</span></label>
+          <select
+            id="habitacion-tipo"
+            class="campo"
+            formControlName="tipoHabitacionId"
+            required
+            [class.campo-invalido]="invalido('tipoHabitacionId')"
+            [attr.aria-invalid]="invalido('tipoHabitacionId') ? 'true' : null"
+            aria-describedby="error-habitacion-tipo"
+          >
+            <option [ngValue]="null" disabled>Selecciona un tipo</option>
+            @if (
+              formulario.controls.tipoHabitacionId.value !== null &&
+              !tipoDisponible(formulario.controls.tipoHabitacionId.value)
+            ) {
+              <option [ngValue]="formulario.controls.tipoHabitacionId.value" disabled>
+                Tipo no disponible; selecciona otro
+              </option>
+            }
+            @for (tipo of tipos(); track tipo.id) {
+              <option [ngValue]="tipo.id">
+                {{ tipo.nombre }} · {{ tipo.capacidad }}
+                {{ tipo.capacidad === 1 ? 'persona' : 'personas' }}
+              </option>
+            }
+          </select>
+          @if (invalido('tipoHabitacionId')) {
+            <p id="error-habitacion-tipo" class="error-campo">
+              Selecciona un tipo de habitación disponible.
+            </p>
+          }
+        </div>
+        <div class="grupo-campo">
+          <label for="habitacion-precio"
+            >Precio por noche (USD) <span aria-hidden="true">*</span></label
+          >
+          <input
+            id="habitacion-precio"
+            class="campo"
+            type="number"
+            formControlName="precioNoche"
+            required
+            min="0.01"
+            max="99999999.99"
+            step="0.01"
+            placeholder="Ej. 45.00"
+            [class.campo-invalido]="invalido('precioNoche')"
+            [attr.aria-invalid]="invalido('precioNoche') ? 'true' : null"
+            aria-describedby="ayuda-habitacion-precio error-habitacion-precio"
+          />
+          <p id="ayuda-habitacion-precio" class="ayuda-campo">
+            Mayor que cero, hasta dos decimales.
+          </p>
+          @if (invalido('precioNoche')) {
+            <p id="error-habitacion-precio" class="error-campo">
+              Ingresa un precio entre 0.01 y 99,999,999.99, con hasta dos decimales.
+            </p>
+          }
+        </div>
+        <div class="grupo-campo">
+          <label for="habitacion-estado">Estado <span aria-hidden="true">*</span></label>
+          <select
+            id="habitacion-estado"
+            class="campo"
+            formControlName="estado"
+            required
+            [class.campo-invalido]="invalido('estado')"
+            [attr.aria-invalid]="invalido('estado') ? 'true' : null"
+            aria-describedby="error-habitacion-estado"
+          >
+            <option value="DISPONIBLE">Disponible</option>
+            <option value="MANTENIMIENTO">Mantenimiento</option>
+          </select>
+          @if (invalido('estado')) {
+            <p id="error-habitacion-estado" class="error-campo">Selecciona un estado válido.</p>
+          }
+        </div>
+      </fieldset>
+    </div>
+    <div class="modal-pie">
+      <button
+        type="button"
+        class="btn btn-secundario"
+        (click)="cerrarFormulario()"
+        [disabled]="guardando()"
+      >
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        class="btn btn-primario"
+        [disabled]="guardando() || !tiposDisponibles()"
+      >
+        {{ guardando() ? 'Guardando…' : 'Guardar habitación' }}
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<dialog
+  #confirmacion
+  class="modal modal-confirmacion"
+  aria-labelledby="titulo-eliminar-habitacion"
+  (cancel)="$event.preventDefault(); cancelarEliminacion()"
+>
+  <div class="modal-cabecera">
+    <div>
+      <p class="sobretitulo">Confirmar eliminación</p>
+      <h2 id="titulo-eliminar-habitacion">Eliminar habitación</h2>
+    </div>
+    <button
+      type="button"
+      class="cerrar-modal"
+      aria-label="Cerrar confirmación"
+      [disabled]="eliminando()"
+      (click)="cancelarEliminacion()"
+    >
+      ×
+    </button>
+  </div>
+  <div class="modal-cuerpo">
+    <p>
+      ¿Deseas eliminar la habitación <strong>{{ habitacionAEliminar()?.numero }}</strong>? Esta
+      acción no se puede deshacer.
+    </p>
+    @if (errorEliminacion()) {
+      <div class="mensaje mensaje-error" role="alert">
+        <app-icon nombre="alerta" /><span>{{ errorEliminacion() }}</span>
+      </div>
+    }
+  </div>
+  <div class="modal-pie">
+    <button
+      type="button"
+      class="btn btn-secundario"
+      (click)="cancelarEliminacion()"
+      [disabled]="eliminando()"
+    >
+      Cancelar
+    </button>
+    <button
+      type="button"
+      class="btn btn-peligro"
+      (click)="confirmarEliminar()"
+      [disabled]="eliminando()"
+    >
+      {{ eliminando() ? 'Eliminando…' : 'Eliminar habitación' }}
+    </button>
+  </div>
+</dialog>
