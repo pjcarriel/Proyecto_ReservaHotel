@@ -1,11 +1,255 @@
-<app-page-header titulo="Reservas" descripcion="Reservas confirmadas y canceladas." icono="reservas">
-  <button type="button" class="btn btn-primario" disabled>
+<app-page-header titulo="Reservas" descripcion="Listado de reservas confirmadas y canceladas." icono="reservas">
+  <button type="button" class="btn btn-primario" disabled title="Creación de reservas disponible en tarea #25">
     <app-icon nombre="mas" /> Nueva reserva
   </button>
 </app-page-header>
 
-<!-- TODO (tarea #23, Jonathan): reemplazar por la tabla real con las mismas clases (.tarjeta, .campo, .tabla, .estado) -->
-<app-en-construccion
-  [columnas]="['Número', 'Huésped', 'Entrada', 'Salida', 'Total', 'Estado']"
-  buscar="Buscar por número o huésped…"
-  responsable="Jonathan · tarea #23" />
+@if (mensajeExito()) {
+  <div class="aviso-exito" role="status">
+    <span>{{ mensajeExito() }}</span>
+    <button type="button" class="cerrar-aviso" (click)="mensajeExito.set(null)" aria-label="Cerrar aviso">×</button>
+  </div>
+}
+
+<section class="tarjeta">
+  <div class="herramientas">
+    <label class="buscar">
+      <app-icon nombre="buscar" />
+      <input
+        class="campo"
+        type="search"
+        placeholder="Buscar por número, huésped o cédula…"
+        aria-label="Buscar reserva"
+        [value]="filtroTexto()"
+        (input)="filtroTexto.set($any($event.target).value)" />
+    </label>
+
+    <div class="herramientas-derecha">
+      <div class="segmentos" role="group" aria-label="Filtrar por estado">
+        <button type="button" [attr.aria-pressed]="filtroEstado() === 'TODAS'" (click)="filtroEstado.set('TODAS')">
+          Todas
+        </button>
+        <button type="button" [attr.aria-pressed]="filtroEstado() === 'CONFIRMADA'" (click)="filtroEstado.set('CONFIRMADA')">
+          Confirmadas
+        </button>
+        <button type="button" [attr.aria-pressed]="filtroEstado() === 'CANCELADA'" (click)="filtroEstado.set('CANCELADA')">
+          Canceladas
+        </button>
+      </div>
+
+      <span class="etiqueta">
+        {{ reservasFiltradas().length }} de {{ reservas().length }} reservas
+      </span>
+    </div>
+  </div>
+
+  @if (cargando()) {
+    <div class="tabla-contenedor" aria-busy="true">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Número</th>
+            <th>Huésped</th>
+            <th>Fechas</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th class="col-acciones">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (fila of filasEsqueleto; track fila) {
+            <tr>
+              <td><span class="esqueleto"></span></td>
+              <td><span class="esqueleto"></span></td>
+              <td><span class="esqueleto"></span></td>
+              <td><span class="esqueleto"></span></td>
+              <td><span class="esqueleto"></span></td>
+              <td><span class="esqueleto"></span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else if (errorCarga()) {
+    <div class="vacio" role="alert">
+      <span class="vacio-icono"><app-icon nombre="alerta" /></span>
+      <strong>No se pudieron cargar las reservas</strong>
+      <p>{{ errorCarga() }}</p>
+      <button type="button" class="btn btn-secundario" (click)="cargarReservas()">Reintentar</button>
+    </div>
+  } @else if (reservasFiltradas().length === 0) {
+    <div class="vacio">
+      <span class="vacio-icono"><app-icon nombre="reservas" /></span>
+      @if (filtroTexto().trim() || filtroEstado() !== 'TODAS') {
+        <strong>Sin coincidencias</strong>
+        <p>No hay reservas que coincidan con los filtros aplicados.</p>
+        <button type="button" class="btn btn-secundario" (click)="filtroTexto.set(''); filtroEstado.set('TODAS')">
+          Limpiar filtros
+        </button>
+      } @else {
+        <strong>Aún no hay reservas registradas</strong>
+        <p>Las reservas registradas aparecerán aquí con su estado y monto total.</p>
+      }
+    </div>
+  } @else {
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Número</th>
+            <th>Huésped</th>
+            <th>Fechas</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th class="col-acciones">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of reservasFiltradas(); track r.id) {
+            <tr>
+              <td class="mono">{{ r.numero }}</td>
+              <td>
+                <div class="celda-principal">{{ r.huespedNombre }}</div>
+                <div class="celda-secundaria">CI: {{ r.huespedCedula }}</div>
+              </td>
+              <td>
+                <div class="celda-principal">{{ r.fechaEntrada }} → {{ r.fechaSalida }}</div>
+                <div class="celda-secundaria">{{ nochesDe(r) }} {{ nochesDe(r) === 1 ? 'noche' : 'noches' }}</div>
+              </td>
+              <td class="mono">{{ r.total | currency:'USD':'symbol':'1.2-2' }}</td>
+              <td>
+                <span class="estado"
+                      [class.estado-exito]="r.estado === 'CONFIRMADA'"
+                      [class.estado-peligro]="r.estado === 'CANCELADA'">
+                  {{ r.estado }}
+                </span>
+              </td>
+              <td class="acciones-fila">
+                <button type="button" class="btn btn-secundario btn-sm" (click)="verDetalle(r)">
+                  Detalle
+                </button>
+                @if (r.estado === 'CONFIRMADA') {
+                  <button type="button" class="btn btn-peligro-suave btn-sm" (click)="confirmarCancelar(r)">
+                    Cancelar
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+<!-- Modal Detalle de Reserva -->
+@if (reservaDetalle(); as r) {
+  <div class="modal-fondo" (click)="cerrarDetalle()">
+    <div class="tarjeta modal-caja" role="dialog" aria-modal="true"
+         aria-labelledby="titulo-detalle-reserva"
+         (click)="$event.stopPropagation()">
+      <header class="tarjeta-cabecera">
+        <div>
+          <h2 id="titulo-detalle-reserva">Reserva {{ r.numero }}</h2>
+          <p>{{ r.huespedNombre }} · CI {{ r.huespedCedula }}</p>
+        </div>
+        <button type="button" class="btn-cerrar" (click)="cerrarDetalle()" aria-label="Cerrar">×</button>
+      </header>
+
+      <div class="modal-cuerpo">
+        <div class="resumen-grid">
+          <div>
+            <span class="resumen-etiq">Entrada</span>
+            <strong>{{ r.fechaEntrada }}</strong>
+          </div>
+          <div>
+            <span class="resumen-etiq">Salida</span>
+            <strong>{{ r.fechaSalida }}</strong>
+          </div>
+          <div>
+            <span class="resumen-etiq">Estado</span>
+            <span class="estado"
+                  [class.estado-exito]="r.estado === 'CONFIRMADA'"
+                  [class.estado-peligro]="r.estado === 'CANCELADA'">
+              {{ r.estado }}
+            </span>
+          </div>
+        </div>
+
+        @if (r.detalles?.length) {
+          <table class="tabla tabla-compacta">
+            <thead>
+              <tr>
+                <th>Habitación</th>
+                <th>Tipo</th>
+                <th>Noches</th>
+                <th>Precio/noche</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (d of r.detalles; track d.habitacionId) {
+                <tr>
+                  <td class="mono">#{{ d.habitacionNumero }}</td>
+                  <td>{{ d.tipoHabitacionNombre }}</td>
+                  <td>{{ d.noches }}</td>
+                  <td>{{ d.precioNoche | currency:'USD':'symbol':'1.2-2' }}</td>
+                  <td class="mono">{{ d.subtotal | currency:'USD':'symbol':'1.2-2' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+
+        <div class="totales-caja">
+          <div><span>Subtotal</span><span>{{ r.subtotal | currency:'USD':'symbol':'1.2-2' }}</span></div>
+          <div><span>IVA (15%)</span><span>{{ r.iva | currency:'USD':'symbol':'1.2-2' }}</span></div>
+          <div class="total-final"><span>Total</span><span>{{ r.total | currency:'USD':'symbol':'1.2-2' }}</span></div>
+        </div>
+      </div>
+
+      <footer class="modal-pie">
+        <button type="button" class="btn btn-secundario" (click)="cerrarDetalle()">Cerrar</button>
+      </footer>
+    </div>
+  </div>
+}
+
+<!-- Modal Confirmar Cancelación -->
+@if (reservaACancelar(); as objetivo) {
+  <div class="modal-fondo" (click)="cerrarModalCancelar()">
+    <div class="tarjeta modal-caja modal-confirmar" role="dialog" aria-modal="true"
+         aria-labelledby="titulo-cancelar-reserva"
+         (click)="$event.stopPropagation()">
+      <header class="tarjeta-cabecera">
+        <div>
+          <h2 id="titulo-cancelar-reserva">Cancelar reserva</h2>
+          <p>Las habitaciones asociadas volverán a quedar disponibles.</p>
+        </div>
+        <button type="button" class="btn-cerrar" (click)="cerrarModalCancelar()" aria-label="Cerrar">×</button>
+      </header>
+
+      <div class="modal-cuerpo">
+        <p>
+          ¿Confirmas que deseas cancelar la reserva <strong class="mono">{{ objetivo.numero }}</strong>
+          a nombre de <strong>{{ objetivo.huespedNombre }}</strong>?
+        </p>
+
+        @if (errorCancelar()) {
+          <p class="alerta-error" role="alert">
+            <app-icon nombre="alerta" /> {{ errorCancelar() }}
+          </p>
+        }
+      </div>
+
+      <footer class="modal-pie">
+        <button type="button" class="btn btn-secundario" (click)="cerrarModalCancelar()" [disabled]="cancelando()">
+          Volver
+        </button>
+        <button type="button" class="btn btn-peligro" (click)="ejecutarCancelar()" [disabled]="cancelando()">
+          {{ cancelando() ? 'Cancelando…' : 'Sí, cancelar reserva' }}
+        </button>
+      </footer>
+    </div>
+  </div>
+}

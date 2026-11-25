@@ -30,7 +30,7 @@ export const SECCIONES_MENU: SeccionMenu[] = [
   {
     titulo: 'Recepción',
     opciones: [
-      { texto: 'Reservas', descripcion: 'Crear y cancelar reservas', icono: 'reservas', ruta: '/reservas', roles: TODOS, listo: false },
+      { texto: 'Reservas', descripcion: 'Crear y cancelar reservas', icono: 'reservas', ruta: '/reservas', roles: TODOS, listo: true },
       { texto: 'Huéspedes', descripcion: 'Registro de huéspedes', icono: 'huespedes', ruta: '/huespedes', roles: TODOS, listo: true },
     ],
   },
